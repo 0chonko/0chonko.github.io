@@ -1,0 +1,8 @@
+<script>
+  (function () {
+    const k = "cv-theme";
+    const saved = localStorage.getItem(k);
+    const theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>

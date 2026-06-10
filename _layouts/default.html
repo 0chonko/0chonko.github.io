@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+{% seo %}
+    <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
+    {% include head-custom.html %}
+  </head>
+  <body>
+    <div class="cornell-sheet">
+      {% include cv-header.html %}
+
+      <main class="cornell-body">
+        {% include cv-sidebar.html %}
+
+        <div id="content-wrap" class="cornell-notes">
+          <div class="notes-label">{{ page.section_label | default: "Résumé" }}</div>
+          <article class="article">
+            <div class="article-panel">
+              {% if page.collection == 'blog' %}
+              <header class="post-header">
+                <h1 class="post-title">{{ page.title }}</h1>
+                {% if page.date %}
+                <time class="post-date" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %-d, %Y" }}</time>
+                {% endif %}
+                {% if page.description %}
+                <div class="post-description">{{ page.description | markdownify }}</div>
+                {% endif %}
+              </header>
+              {% elsif page.collection == 'readinglist' %}
+              <header class="post-header">
+                <h1 class="post-title">{{ page.title }}</h1>
+                {% if page.date %}
+                <time class="post-date" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y" }}</time>
+                {% endif %}
+                {% if page.source %}
+                <p class="post-description"><a href="{{ page.source }}" target="_blank" rel="noopener noreferrer">Open source ↗</a></p>
+                {% endif %}
+              </header>
+              {% else %}
+              <div class="node-meta">
+                <span class="chip"><strong>M.Sc.</strong> Computer Science</span>
+              </div>
+              {% endif %}
+              {{ content }}
+            </div>
+          </article>
+        </div>
+      </main>
+    </div>
+
+    {% include site-footer.html %}
+    <script src="{{ "/assets/js/theme.js" | relative_url }}"></script>
+  </body>
+</html>

@@ -1,0 +1,61 @@
+remote_theme: pages-themes/minimal@v0.2.0
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-github-metadata
+
+title: German Savchenko
+description: M.Sc. · Software Engineer
+lang: en
+
+email: german.savchenko@gmail.com
+location: Würzburg, DE
+linkedin: https://linkedin.com/in/german-savchenko-9aa363138/
+github_username: 0chonko
+
+show_downloads: false
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - reload.sh
+  - vendor
+  - .gitignore
+  - .cursor
+  - .bundle
+
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: highlight
+    span:
+      line_numbers: false
+
+collections_dir: content
+
+collections:
+  resume:
+    output: false
+  blog:
+    output: true
+    permalink: /blog/:name/
+  readinglist:
+    output: true
+    permalink: /readinglist/:name/
+
+defaults:
+  - scope:
+      path: ""
+      type: blog
+    values:
+      layout: default
+      section_label: Blog
+  - scope:
+      path: ""
+      type: readinglist
+    values:
+      layout: default
+      section_label: Reading List

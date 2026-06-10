@@ -1,0 +1,65 @@
+<div class="sidebar-shell">
+  <aside class="cornell-sidebar">
+    <div class="cues-header">
+      <span class="field-label">Navigation</span>
+    </div>
+    <nav class="cornell-cues" id="site-nav" aria-label="Site navigation">
+      {% assign nav_resume_open = false %}
+      {% assign nav_blog_open = false %}
+      {% assign nav_reading_open = false %}
+      {% if page.collection == 'blog' %}
+        {% assign nav_blog_open = true %}
+      {% elsif page.collection == 'readinglist' %}
+        {% assign nav_reading_open = true %}
+      {% else %}
+        {% assign nav_resume_open = true %}
+      {% endif %}
+      {% assign welcome_post = site.blog | where: "title", "Welcome" | first %}
+
+      <details class="nav-group" id="nav-resume"{% if nav_resume_open %} open{% endif %}>
+        <summary>
+          <span class="nav-group-chevron" aria-hidden="true"></span>
+          <a href="{{ '/' | relative_url }}" class="nav-group-link{% if nav_resume_open %} is-active{% endif %}">Resume</a>
+        </summary>
+        {% assign sections = site.resume | sort: "order" %}
+        {% for s in sections %}
+          <a href="{{ '/' | relative_url }}#{{ s.slug }}">{{ s.title }}</a>
+        {% endfor %}
+      </details>
+
+      <details class="nav-group" id="nav-blog"{% if nav_blog_open %} open{% endif %}>
+        <summary>
+          <span class="nav-group-chevron" aria-hidden="true"></span>
+          <a href="{{ welcome_post.url | default: '/blog/Welcome/' | relative_url }}" class="nav-group-link{% if nav_blog_open %} is-active{% endif %}">Blog</a>
+        </summary>
+        {% assign pinned_posts = site.blog | where_exp: "p", "p.pinned == true" %}
+        {% assign dated_posts = site.blog | where_exp: "p", "p.pinned != true" | sort: "date" | reverse %}
+        {% for post in pinned_posts %}
+          {% if post.title %}
+          <a href="{{ post.url | relative_url }}" class="nav-blog-entry nav-blog-entry-pinned{% if page.url == post.url %} is-active{% endif %}">
+            <span class="nav-entry-title">{{ post.title }}</span>
+          </a>
+          {% endif %}
+        {% endfor %}
+        {% for post in dated_posts %}
+          {% if post.title %}
+          <a href="{{ post.url | relative_url }}" class="nav-blog-entry{% if page.url == post.url %} is-active{% endif %}">
+            <span class="nav-entry-title">{{ post.title }}</span>
+            {% if post.date %}
+            <time class="nav-entry-date" datetime="{{ post.date | date: '%Y-%m-%d' }}">{{ post.date | date: "%b %Y" }}</time>
+            {% endif %}
+          </a>
+          {% endif %}
+        {% endfor %}
+      </details>
+      <details class="nav-group" id="nav-readinglist"{% if nav_reading_open %} open{% endif %}>
+        <summary>
+          <span class="nav-group-chevron" aria-hidden="true"></span>
+          <a href="{{ '/readinglist/' | relative_url }}" class="nav-group-link{% if nav_reading_open %} is-active{% endif %}">Reading List</a>
+        </summary>
+        <a href="{{ '/readinglist/' | relative_url }}"{% if page.url == '/readinglist/' %} class="is-active"{% endif %}>All references</a>
+      </details>
+    </nav>
+  </aside>
+  <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-expanded="true" aria-controls="site-nav" title="Hide sidebar" aria-label="Hide sidebar"></button>
+</div>

@@ -1,0 +1,25 @@
+<header class="cornell-header">
+  <div class="cornell-field topic-field">
+    <span class="field-label">Name</span>
+    <h1><a href="{{ "/" | relative_url }}">{{ site.title | default: site.github.repository_name }}</a></h1>
+    <span class="hint">{{ site.description | default: site.github.project_tagline }}</span>
+    <div class="header-actions">
+      {% if site.email %}
+      <a class="btn" href="mailto:{{ site.email }}">Email</a>
+      {% endif %}
+      {% if site.linkedin %}
+      <a class="btn" href="{{ site.linkedin }}">LinkedIn</a>
+      {% endif %}
+      {% if site.github_username %}
+      <a class="btn" href="https://github.com/{{ site.github_username }}">GitHub</a>
+      {% elsif site.github.is_user_page %}
+      <a class="btn" href="{{ site.github.owner_url }}">GitHub</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="cornell-field date-field">
+    <span class="field-label">Location</span>
+    <span class="location">{{ site.location }}</span>
+    <button type="button" class="secondary theme-toggle" id="theme-btn" title="Toggle light/dark theme">Dark</button>
+  </div>
+</header>

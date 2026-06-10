@@ -1,0 +1,10 @@
+---
+layout: default
+section_label: Résumé
+---
+{% assign sections = site.resume | sort: "order" %}
+{% for section in sections %}
+<section id="{{ section.slug }}" class="resume-section">
+  {{ section.content }}
+</section>
+{% endfor %}
