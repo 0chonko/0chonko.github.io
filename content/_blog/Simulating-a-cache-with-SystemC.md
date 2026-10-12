@@ -63,19 +63,7 @@ To evaluate this baseline, I ran traces from matrix multiplication (`max_mul` ac
 
 Moving from a single-core environment to a multicore system introduces the classic challenge of cache coherence. Using SystemC’s Transaction-Level Modeling (TLM) concepts, I designed a shared-bus architecture where master caches and memory-mapped slaves communicate directly through well-defined interfaces.
 
-```mermaid
-sequenceDiagram
-  participant CPU
-  participant Cache
-  participant Bus
-  participant Memory
-  CPU->>Cache: read/write
-  Cache->>Bus: request on miss
-  Bus->>Cache: snoop other caches
-  Bus->>Memory: read/write if no hit
-  Memory-->>Bus: response
-  Bus-->>Cache: response_received
-```
+![Bus coherence sequence: CPU, cache, bus snooping, and memory](/assets/blog/simulating-a-cache-with/bus-coherence-sequence.png)
 
 ### Decoupling via Interfaces
 I abstracted communication into three primary interfaces:

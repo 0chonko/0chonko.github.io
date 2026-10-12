@@ -28,21 +28,7 @@ The analysis tool is a mode-switching Processing app (keyboard shortcuts flip be
 
 The production path that mattered for the thesis looked like this:
 
-```text
-CD mask (Output/) + lat/lon grid (Lat_mask_entire/)
-        |
-        v
-OpenCV findContours  -->  pixel contours (DELIM-separated clusters)
-        |
-        v
-index = y * res + x  -->  lookup geographic coordinate
-        |
-        v
-sort vertices (centroid angles)  -->  concave hull (k-NN)
-        |
-        v
-GeoJSON FeatureCollection  -->  Kepler.gl / ArcGIS / Tableau
-```
+![Mask-to-GeoJSON pipeline from contours through hulls to FeatureCollection](/assets/blog/pixel-masks-geojson/mask-to-geojson.png)
 
 ### Pixel index to coordinate
 

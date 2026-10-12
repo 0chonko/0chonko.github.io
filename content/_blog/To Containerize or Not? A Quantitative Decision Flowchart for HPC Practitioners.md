@@ -16,15 +16,7 @@ From benchmarks on *Snellius*, this post walks through the trade-offs between co
 
 When deploying containerized workloads via **Apptainer** (formerly Singularity), we generally choose between three models:
 
-```text
-                  HPC CONTAINER MODELS
-                           |
-       +-------------------+-------------------+
-       |                   |                   |
- [Hybrid Model]       [Bind Model]     [Fully Contained]
-  Uses host's          Mounts host      Isolates everything,
-  network/MPI stack    directories      Spack-compiled
-```
+![HPC container models: Hybrid, Bind, and Fully Contained](/assets/blog/containerize/container-models.png)
 
 ### 1. The Hybrid Model
 The container packages your user-space application code, but at runtime, you dynamically mount the host supercomputer's MPI and network drivers.
@@ -66,38 +58,7 @@ Even with an optimized Spack specification, if the container runtime does not mo
 ## The Decision Flowchart: A Pragmatic Guide
 To simplify this decision-making process, I synthesized our experimental findings into a structured flowchart:
 
-```
-              [ Start: Evaluate HPC Application ]
-                              |
-         Is the app a pure C/C++/Fortran program
-         with minimal external dependencies?
-                    /                   \
-                 (Yes)                  (No)
-                  /                       \
-         [ Don't use a container ]    Is the program going to be
-         (Run natively on host)       distributed alongside other
-                                      containerized applications?
-                                            /           \
-                                         (Yes)          (No)
-                                          /               \
-                          [ Basic Contained ]      Does it scale to more
-                                                   than one compute node?
-                                                         /         \
-                                                      (Yes)        (No)
-                                                        /             \
-                                        Does a ~10x hit to     [Any viable shared]
-                                        latency/bandwidth       [memory parallelism]
-                                        affect the application?        |
-                                              /         \         [Don't use MPI]
-                                           (Yes)        (No)
-                                            /             \
-                       Can you replicate the host's   [ Basic Contained ]
-                       MPI stack using public repos?
-                             /              \
-                          (Yes)             (No)
-                            /                 \
-                  [ Optimized Contained ]   [ Hybrid Model ]
-```
+![Decision flowchart for when and how to containerize HPC applications](/assets/blog/containerize/decision-flowchart.png)
 
 ### Explaining the Decision Logic:
 

@@ -15,14 +15,7 @@ Standard GPU monitoring libraries, such as the **NVIDIA Management Library (NVML
 
 However, making synchronous API calls to retrieve GPU performance metrics requires transitioning from user space to kernel space. When executing micro-benchmarks, such as Peer-to-Peer CUDA IPC transfers that take as little as `0.010ms`, the latency of the NVML/DCGM API call itself can easily swallow the benchmark's execution time and skew the bandwidth results.
 
-```text
-Synchronous Profiling (Bad):
-[Send Data (10μs)] -> [Query NVML (500μs) - BLOCKS!] -> [Send Data (10μs)]
-
-Asynchronous Profiling (Good):
-Thread 0 (GPU Core): [Send Data (10μs)] -> [Send Data (10μs)] -> [Send Data (10μs)]
-Thread 1 (CPU Core): -----[Asynchronously poll NVML every 25ms]---------------------
-```
+![Synchronous NVML queries block the critical path; async polling does not](/assets/blog/measuring-without-mutating/sync-vs-async.png)
 
 ## Architectural Solution: The Asynchronous Detached Profiler
 
@@ -54,11 +47,7 @@ To address this, I introduced a precise **25ms inter-transmission delay** within
 2.  We gathered high-fidelity, dynamic power draw curves instead of a flatline of cached data.
 3.  The CPU overhead of driver queries remained virtually non-existent.
 
-```
-          1500ms           25ms         25ms               End of Transfers
-Host CPU: |--Profiler Init--|--trx 1--|--trx 2--| ... |--trx n--|--Signal Join--|
-Profiler: [Register Init]   [Sample]  [Sample]        [Sample]   [Dump to CSV]
-```
+![Host transfers and profiler samples aligned on a 25ms cadence](/assets/blog/measuring-without-mutating/profiler-timeline.png)
 
 ## API Selection: NVML vs. DCGM
 When designing the tool, we used both libraries where each one was strongest:

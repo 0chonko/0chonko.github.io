@@ -32,13 +32,7 @@ That last point clicked immediately given my UCX debugging on Snellius. I spent 
 
 Under the hood, GASPI is a **Partitioned Global Address Space (PGAS)** model. You still know memory is physically distributed across nodes, but you can reference remote partitions through a unified logical address space.
 
-```text
-               GLOBAL ADDRESS SPACE (PGAS)
-  +---------------------------------------------------+
-  |  Node 1 RAM  |  Node 2 RAM  | ...  |  Node N RAM  |
-  +--------------+--------------+------+--------------+
-     (Local)        (Remote)               (Remote)
-```
+![PGAS global address space spanning local and remote node RAM](/assets/blog/gaspi-hlrs/pgas-address-space.png)
 
 The practical abstraction is the **segment**: a contiguous block of virtual memory registered with the NIC.
 
@@ -92,9 +86,7 @@ The section that stuck with me most was not a single API call. It was the execut
 
 A classic stencil or 1D ring exchange in MPI often looks like this:
 
-```
-[ Phase 1: Communicate ] -> [ Global Barrier ] -> [ Phase 2: Compute ] -> [ Global Barrier ]
-```
+![Bulk-synchronous phases: communicate, barrier, compute, barrier](/assets/blog/gaspi-hlrs/bulk-sync-phases.png)
 
 Simple to reason about. Wasteful in practice. CPUs idle while the network works, then the network idles while CPUs work. Global barriers also collect every node's jitter into one synchronization point, which is rough on large, heterogeneous partitions.
 
