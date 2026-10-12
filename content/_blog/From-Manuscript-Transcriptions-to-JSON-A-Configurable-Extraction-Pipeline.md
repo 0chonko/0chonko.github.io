@@ -65,7 +65,7 @@ In the small-data regime, formatting failures and schema violations are often ch
 
 Without constraints, a model can emit broken JSON. With a grammar-backed decoder, illegal tokens cannot be produced. The model may still hallucinate field *values*, but it cannot break surface syntax.
 
-![Constraint stack from base model through decoding, validation, and repair](/assets/blog/manuscript-json/constraint-stack.png)
+![Figure 1. Constraint stack from base model through decoding, validation, and repair](/assets/blog/manuscript-json/constraint-stack.png)
 
 Fine-tuning belongs in the stack when the model consistently misreads *meaning* (confuses colophon with dating, drops nested physical description) after constraints and prompting are in place. Not when the output forgot a closing brace.
 
@@ -91,13 +91,13 @@ The manuscript case should generalize across the library migration: raw text wil
 
 For historical manuscripts, the LLM only needs to appear in a few stages:
 
-![Extraction pipeline from OCR text to schema mapping and optional repair](/assets/blog/manuscript-json/extraction-pipeline.png)
+![Figure 2. Extraction pipeline from OCR text to schema mapping and optional repair](/assets/blog/manuscript-json/extraction-pipeline.png)
 
 Regexes, layout heuristics, and lookup tables handle surprising amounts of catalog boilerplate (`Bl.`, `mm`, `Bastarda`, four-digit years). The model is for semantic glue, not every token.
 
 **Do not extract directly into the target schema.** Use a canonical metadata representation (CMR) and a mapper:
 
-![Raw document to CMR to domain JSON via a mapping layer](/assets/blog/manuscript-json/cmr-mapping.png)
+![Figure 3. Raw document to CMR to domain JSON via a mapping layer](/assets/blog/manuscript-json/cmr-mapping.png)
 
 ```json
 {
@@ -130,7 +130,7 @@ One backend schema might expose `Shelfmark`, `Author`, `Title`, `Dating`; anothe
 
 Together these describe a platform-shaped architecture:
 
-![Platform architecture from raw input to domain JSON schema output](/assets/blog/manuscript-json/platform-architecture.png)
+![Figure 4. Platform architecture from raw input to domain JSON schema output](/assets/blog/manuscript-json/platform-architecture.png)
 
 What changes per record type: schema definition, mapping rules, examples. What stays reusable: parser, extraction engine, constrained decoding, evaluation framework.
 

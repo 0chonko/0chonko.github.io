@@ -16,7 +16,7 @@ From benchmarks on *Snellius*, this post walks through the trade-offs between co
 
 When deploying containerized workloads via **Apptainer** (formerly Singularity), we generally choose between three models:
 
-![HPC container models: Hybrid, Bind, and Fully Contained](/assets/blog/containerize/container-models.png)
+![Figure 1. HPC container models: Hybrid, Bind, and Fully Contained](/assets/blog/containerize/container-models.png)
 
 ### 1. The Hybrid Model
 The container packages your user-space application code, but at runtime, you dynamically mount the host supercomputer's MPI and network drivers.
@@ -58,7 +58,7 @@ Even with an optimized Spack specification, if the container runtime does not mo
 ## The Decision Flowchart: A Pragmatic Guide
 To simplify this decision-making process, I synthesized our experimental findings into a structured flowchart:
 
-![Decision flowchart for when and how to containerize HPC applications](/assets/blog/containerize/decision-flowchart.png)
+![Figure 2. Decision flowchart for when and how to containerize HPC applications](/assets/blog/containerize/decision-flowchart.png)
 
 ### Explaining the Decision Logic:
 

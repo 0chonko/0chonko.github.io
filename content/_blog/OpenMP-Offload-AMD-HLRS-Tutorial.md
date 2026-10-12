@@ -28,7 +28,7 @@ That last point landed when Johanna Potyka walked through **CLOUDSC** and other 
 
 Before any pragmas, the course spent time on architecture taxonomy. An **APU** is not just a GPU glued to a CPU socket. On MI300A, CPU chiplets and CDNA3 compute dies share **128 GB HBM3** in a unified address space. No separate host DRAM and device HBM to shuttle between over PCIe.
 
-![Discrete MI300X host/GPU memory versus MI300A unified HBM3](/assets/blog/openmp-offload-hlrs-tutorial/discrete-vs-apu.png)
+![Figure 1. Discrete MI300X host/GPU memory versus MI300A unified HBM3](/assets/blog/openmp-offload-hlrs-tutorial/discrete-vs-apu.png)
 
 For porting, that split matters immediately:
 

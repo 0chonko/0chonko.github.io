@@ -28,7 +28,7 @@ The analysis tool is a mode-switching Processing app (keyboard shortcuts flip be
 
 The production path that mattered for the thesis looked like this:
 
-![Mask-to-GeoJSON pipeline from contours through hulls to FeatureCollection](/assets/blog/pixel-masks-geojson/mask-to-geojson.png)
+![Figure 1. Mask-to-GeoJSON pipeline from contours through hulls to FeatureCollection](/assets/blog/pixel-masks-geojson/mask-to-geojson.png)
 
 ### Pixel index to coordinate
 

@@ -12,11 +12,11 @@ Echo cannot run Tailscale. The fix is to put Tailscale inside the skill's Lambda
 
 ## Architecture
 
-![Request path: Echo through Alexa and Lambda into the home MCP hub](/assets/blog/alexa-tailscale/architecture.png)
+![Figure 1. Request path: Echo through Alexa and Lambda into the home MCP hub](/assets/blog/alexa-tailscale/architecture.png)
 
 AWS stays a voice relay (HTTPS, NLU, skill timeout). Inference and tool calls stay on the home agent. Secrets stay on the tailnet. One free-text intent beats N intents for N MCP tools: the agent routes.
 
-![Lambda joins the tailnet; the hook binds Tailscale IPv4 only](/assets/blog/alexa-tailscale/tailnet.png)
+![Figure 2. Lambda joins the tailnet; the hook binds Tailscale IPv4 only](/assets/blog/alexa-tailscale/tailnet.png)
 
 ---
 
@@ -48,7 +48,7 @@ curl -sS -H "Authorization: Bearer $ALEXA_HOOK_SECRET" \
 
 ## Request path and the 8-second wall
 
-![Sequence: skill JSON, SOCKS5, hook, agent, MCP, speech](/assets/blog/alexa-tailscale/request-flow.png)
+![Figure 3. Sequence: skill JSON, SOCKS5, hook, agent, MCP, speech](/assets/blog/alexa-tailscale/request-flow.png)
 
 Lambda's handler extracts the utterance, POSTs to the hook, and returns speech. The hook maps each Amazon `userId` to a `chatId`, runs `agent create-chat` on first contact, then:
 

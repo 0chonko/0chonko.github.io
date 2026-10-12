@@ -15,7 +15,7 @@ Standard GPU monitoring libraries, such as the **NVIDIA Management Library (NVML
 
 However, making synchronous API calls to retrieve GPU performance metrics requires transitioning from user space to kernel space. When executing micro-benchmarks, such as Peer-to-Peer CUDA IPC transfers that take as little as `0.010ms`, the latency of the NVML/DCGM API call itself can easily swallow the benchmark's execution time and skew the bandwidth results.
 
-![Synchronous NVML queries block the critical path; async polling does not](/assets/blog/measuring-without-mutating/sync-vs-async.png)
+![Figure 1. Synchronous NVML queries block the critical path; async polling does not](/assets/blog/measuring-without-mutating/sync-vs-async.png)
 
 ## Architectural Solution: The Asynchronous Detached Profiler
 
@@ -40,14 +40,14 @@ This detached thread runs asynchronously. When all GPU transfers are completed, 
 ### 2. Incorporating Inter-Transmission Delays (25ms)
 Simply offloading the profiler to a separate thread is not enough. If the detached thread queries the NVML API as fast as possible, it will waste CPU cycles and trigger driver bottlenecks. 
 
-Furthermore, NVIDIA hardware performance counters have a built-in sampling rate limit. If you query the driver 50 times in under 20ms, it will simply return duplicate, cached values because the hardware registers have not updated yet.
+Furthermore, NVIDIA hardware performance counters have a built-in sampling rate limit. The driver will happily answer at any time, but most of those answers are **cached duplicates**: if you query 50 times in under 20ms, the hardware registers have not updated yet, so you just burn CPU for a flatline.
 
-To address this, I introduced a precise **25ms inter-transmission delay** within the benchmark loop. Spacing out our message transfers ensured that:
-1.  The NVML/DCGM libraries had sufficient time to populate real, physical counter values.
+To address this, I introduced a precise **25ms inter-transmission delay** within the benchmark loop. The goal is not denser sampling; it is to **maximize the windows where a sample is actually fresh**:
+1.  Host transfers and profiler polls land near hardware update edges instead of in the long cached stretches.
 2.  We gathered high-fidelity, dynamic power draw curves instead of a flatline of cached data.
 3.  The CPU overhead of driver queries remained virtually non-existent.
 
-![Host transfers and profiler samples aligned on a 25ms cadence](/assets/blog/measuring-without-mutating/profiler-timeline.png)
+![Figure 2. Hardware fresh vs cached windows; naive polling vs 25ms-aligned host and profiler samples](/assets/blog/measuring-without-mutating/profiler-timeline.png)
 
 ## API Selection: NVML vs. DCGM
 When designing the tool, we used both libraries where each one was strongest:
