@@ -483,6 +483,13 @@ nav a.nav-blog-entry.is-active .nav-entry-date {
 
 .article p, .article li { line-height: 1.65; }
 
+.article img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1rem 0;
+}
+
 .article p.meta {
   margin: 0 0 0.5rem;
   color: var(--muted);
