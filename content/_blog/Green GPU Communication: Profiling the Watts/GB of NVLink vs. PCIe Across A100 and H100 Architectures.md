@@ -30,7 +30,7 @@ Because **NVLink** gives higher bandwidth and lower latency than **PCIe**, it fi
 
 Our profiling showed that NVLink paths via **NCCL** or **CUDA IPC** can cut total energy by **up to 60%** versus PCIe-bound options like Trivial Staging, for the same payload sizes.
 
-![PCIe trivial staging uses more energy than NVLink NCCL for the same payload](/assets/blog/green-gpu-comms/energy-nvlink-vs-pcie.png)
+![Figure 1. PCIe trivial staging uses more energy than NVLink NCCL for the same payload](/assets/blog/green-gpu-comms/energy-nvlink-vs-pcie.png)
 ---
 
 ## Finding 2: Power Footprint of Communication Patterns
@@ -42,7 +42,7 @@ For simple P2P transfers, NCCL and CUDA IPC demonstrated the lowest power draw. 
 ### 2. The Collective Burden: All-To-All & All-Reduce
 As the communication patterns became more complex, the differences in power draw grew pronounced. 
 
-![A100 All-Reduce peak power for NCCL, CUDA-Aware MPI, and CUDA IPC](/assets/blog/green-gpu-comms/allreduce-peak-power.png)
+![Figure 2. A100 All-Reduce peak power for NCCL, CUDA-Aware MPI, and CUDA IPC](/assets/blog/green-gpu-comms/allreduce-peak-power.png)
 
 During an `All-Reduce` operation on the A100, **NCCL** draw peaked at **142.95W**. In contrast, **CUDA IPC** peaked at **195W**. While CUDA IPC draws more instantaneous power, its memory allocation and link utilization are highly intensive, meaning it finishes the transfer much faster, resulting in lower net energy usage (Joules) over time.
 
