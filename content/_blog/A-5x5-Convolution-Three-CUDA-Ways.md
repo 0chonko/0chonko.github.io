@@ -22,7 +22,7 @@ Each thread owns one output pixel. A 5×5 stencil reads 25 neighbors per output.
 
 ### 1. Naive (global)
 
-Every tap hits global memory for image and mask. 16 registers, no shared, no constant.
+Start with the textbook kernel: each thread writes one output pixel and pulls all 25 stencil taps straight from global memory, image and mask alike. No staging, no broadcast path. ptxas reports **16** registers, **0** shared, **0** constant. This is the floor you compare everything else against, not a straw man.
 
 | Kernel | Time | Output rate |
 |--------|------|-------------|
@@ -33,9 +33,13 @@ flowchart LR
   N["Naive · 1.58 ms · 10.6 GPix/s"]
 ```
 
+On Ampere that number is already not terrible. L2 is catching a lot of the repeated neighbor reads, so the next optimization has less headroom than the textbook slide deck assumes.
+
 ### 2. Shared tile
 
-Cooperative halo load into **2880 B** shared memory, one `__syncthreads`, mask still from global. Registers climb to 40. Ampere's L2 already does real work for the stencil, so the win is small:
+A 32×16 output block with a 5×5 stencil needs a halo. The shared-memory kernel cooperatively loads that tile once into **2880 B** of smem, hits one `__syncthreads`, then computes from the tile. The mask still comes from global. Register pressure jumps to **40**.
+
+The hope is fewer repeated global loads on interior pixels. The reality on this GPU and this grid:
 
 | Kernel | Time | Output rate |
 |--------|------|-------------|
@@ -47,11 +51,11 @@ flowchart LR
   N["Naive · 1.58 ms"] --> S["Shared · 1.51 ms"]
 ```
 
-About **4%** off naive. Tiling alone is not the story here.
+About **4%** off naive. Tiling alone is not the story here: you paid in registers and a barrier for a nudge that L2 was already giving you most of. Worth doing as a building block, not as the headline win.
 
 ### 3. Shared + constant mask
 
-Keep the tile. Put the 25 identical mask weights in **`__constant__`** (100 B, `cmem[3]`) so they broadcast across the warp instead of 25 extra global loads per output. Registers drop to 36 vs the shared-only path:
+Keep the tile. Change where the **mask** lives. The 5×5 weights are identical for every thread, so loading them from global on every tap is pure waste: 25 extra global transactions per output that do not scale with image reuse. Put them in **`__constant__`** (100 B, `cmem[3]`) and let the warp broadcast. Registers drop to **36** vs the shared-only path.
 
 | Kernel | Time | Output rate |
 |--------|------|-------------|
@@ -65,7 +69,7 @@ flowchart LR
   S --> C["Shared + cmem · 1.15 ms"]
 ```
 
-That is the bar that pays: ~**27%** off shared, **1.37×** vs naive. Optimize what repeats (mask) and what overlaps (image halo), on fair dimensions.
+That is the bar that pays: ~**27%** off shared, **1.37×** vs naive. Same stencil math, fair dimensions, two different memory-hierarchy moves stacked: reuse what overlaps in space (image halo), broadcast what repeats across the warp (mask).
 
 The repo also has an **OpenACC** path on **10000×10000**; that is a different toolchain and size, not a fourth CUDA kernel in this A/B.
 

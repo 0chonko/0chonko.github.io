@@ -139,7 +139,7 @@ I walked five software variants on the same heat grid and the same **32 kB** sim
 
 #### 1. Naive
 
-Redundant locals, cell-by-cell updates. Low-performance baseline.
+Start with the obvious heat update: redundant locals, cell-by-cell writes, no thought about how rows walk through a 32-byte line. This is the low-performance baseline the later variants have to beat in **time** and in **bus-facing cache traffic**, not a cartoon of bad code.
 
 | Variant | What we saw |
 |---------|-------------|
@@ -150,9 +150,11 @@ flowchart LR
   N["Naive · baseline"]
 ```
 
+The simulator sees every load and store as a coherence event. Messy access patterns show up as more requests and more invalidations, even when the math is correct.
+
 #### 2. Improved array access
 
-Pointer arithmetic, fewer redundant writes, sequential row reads.
+First software cleanup, still no tiling: pointer arithmetic instead of heavy local copies, fewer redundant stores, reads that stay sequential along a row. You are teaching the loop to look like streaming DRAM traffic rather than scattered cell touches.
 
 | Variant | What we saw |
 |---------|-------------|
@@ -164,9 +166,11 @@ flowchart LR
   N["Naive"] --> A["Array access"]
 ```
 
+Worth doing, but it does not fix the real problem: a full-row sweep still blows the **32 kB** L1 working set before the next time step reuses those lines.
+
 #### 3. Loop tiling 16×16
 
-Cache-block the grid so the active working set fits in the 32 kB L1 instead of sweeping the whole matrix and evicting rows before reuse.
+Restructure the traversal into **16×16** blocks so the active neighborhood stays inside L1. Instead of walking the whole matrix and evicting older rows before the stencil needs them again, each tile keeps temporal locality local to the block.
 
 | Variant | What we saw |
 |---------|-------------|
@@ -180,11 +184,11 @@ flowchart LR
   A --> T16["Tile 16x16 · ~½ requests"]
 ```
 
-This is the step that pays.
+This is the step that pays. Hit rate can dip a little when you enter a fresh block (cold misses), but total cache requests fell by nearly half, which takes pressure off the shared bus. Wall time followed the request count, not the hit-rate vanity metric.
 
 #### 4. Small tiling 8×8
 
-Same blocking idea, tighter tiles.
+Same blocking idea, smaller tiles. The question is whether fitting an even tighter working set keeps helping, or whether loop overhead and fragmented spatial reuse take the win back.
 
 | Variant | What we saw |
 |---------|-------------|
@@ -200,11 +204,11 @@ flowchart LR
   T16 --> T8["Tile 8x8 · flat/worse"]
 ```
 
-Useful flat/worse bar: smaller is not automatically better.
+Useful flat/worse bar: smaller is not automatically better. Once the tile already fits L1, cutting it further mostly buys more loop control for less reuse per iteration.
 
 #### 5. Cache-aligned OpenMP scheduling
 
-Match static chunk sizing to the 32-byte simulated line to cut false sharing:
+Last knob is coherence under threads, not more blocking. Two OpenMP workers that write adjacent doubles on the same 32-byte line false-share and bounce the line with invalidations. Match static chunk sizing to the simulated line so each chunk owns whole lines:
 
 ```cpp
 const int cacheLineSize = 32; // 32 bytes
@@ -230,7 +234,7 @@ flowchart LR
   T8 --> O["Aligned OMP"]
 ```
 
-A smaller coherence win on top of tiling, not another big time cliff.
+A smaller coherence win on top of tiling, not another big time cliff. Hardware parameters in the schedule paid off, but they did not replace the 16×16 blocking step.
 
 Detail plots for hit rate and total memory accesses across these variants:
 

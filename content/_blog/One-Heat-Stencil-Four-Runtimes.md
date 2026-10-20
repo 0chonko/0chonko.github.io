@@ -28,7 +28,7 @@ Times and FLOP/s are program-reported from the benchmark stdout.
 
 ### 1. Sequential baseline
 
-Plain scalar loop, no threads.
+Plain scalar double-buffered update, no threads, no SIMD. Same 2000 iterations you will see in every later bar. This is the wall-time and FLOP/s reference: if a "parallel" run cannot beat it, the runtime is eating the win.
 
 | Variant | Time (s) | FLOP/s |
 |---------|----------|--------|
@@ -39,9 +39,11 @@ flowchart LR
   S["seq · 4.882 s · 4.92e9 FLOP/s"]
 ```
 
+At this grid size the stencil is already memory-friendly. The ranking later is mostly about synchronization cost per iteration, not clever arithmetic.
+
 ### 2. Vectorize the hot loop (AVX2)
 
-Hand SIMD on the interior (`__m256d`, `VEC_LENGTH=4`). Same single-threaded control flow:
+Before touching threads, vectorize the interior with hand SIMD (`__m256d`, `VEC_LENGTH=4`, 64-byte alignment). Same single-threaded control flow, same iteration count. If AVX2 does not move the needle, threading will not save a bad inner loop.
 
 | Variant | Time (s) | FLOP/s |
 |---------|----------|--------|
@@ -53,11 +55,11 @@ flowchart LR
   S["seq · 4.882 s"] --> V["AVX2 · 2.772 s"]
 ```
 
-About **1.76×** vs seq with no threads. Min/max matched the sequential reference; the printed **`T_diff`** did not (order **6.7** vs ~**0.0047**). Classic reduction bug on that one aggregate. I still trust the timing loop.
+About **1.76×** vs seq with no threads, ~**43%** less wall time. Field min/max matched the sequential reference. The printed **`T_diff`** did not (order **6.7** vs ~**0.0047**): classic reduction bug on that one aggregate while the timed loop still looks sane. I trust the timings; I do not trust that diff line until the reduction is fixed.
 
 ### 3. Pthreads: raise the thread count
 
-Persistent worker threads, barrier between halo and interior. Start at one thread (runtime tax, no parallel payoff), then 8, then 16:
+Switch to persistent worker threads. Halo and interior phases meet at a barrier; a mutex guards the reduction. First check the runtime with **no** parallel payoff: one thread still pays pthreads setup and the barrier path.
 
 | Variant | Time (s) | FLOP/s |
 |---------|----------|--------|
@@ -65,7 +67,7 @@ Persistent worker threads, barrier between halo and interior. Start at one threa
 | simd AVX2 | 2.772 | 8.66e9 |
 | pth -p1 | 5.859 | 4.10e9 |
 
-`-p1` is already slower than seq. Add parallel work:
+`-p1` is already slower than seq. That is the tax floor. Now give the workers real row splits at 8 threads:
 
 | Variant | Time (s) | FLOP/s |
 |---------|----------|--------|
@@ -74,7 +76,7 @@ Persistent worker threads, barrier between halo and interior. Start at one threa
 | pth -p1 | 5.859 | 4.10e9 |
 | pth -p8 | 2.190 | 1.10e10 |
 
-Eight threads is the peak so far (~**2.2×** vs seq). Push to 16:
+Eight threads is the peak so far (~**2.2×** vs seq, ~**1.10e10** FLOP/s). Threads stay alive across the 2000 steps; they hit a barrier each iteration but skip rebuilding a team. Push to 16 on the same host:
 
 | Variant | Time (s) | FLOP/s |
 |---------|----------|--------|
@@ -90,18 +92,18 @@ flowchart LR
   P8 --> P16["pth-p16 · 3.110 s"]
 ```
 
-Sixteen goes backwards: still faster than `-p1`, slower than `-p8`. Contended bandwidth, false sharing on halos, barrier skew.
+Sixteen goes backwards: still faster than `-p1`, slower than `-p8`. Memory bandwidth, false sharing on halo edges, and barrier skew start to dominate. More threads is not free scaling on this box.
 
 ### 4. OpenMP: same thread counts, different runtime
 
-Team fork/join **every** outer iteration. Same size, same iteration count:
+Same grid, same iteration count, different lifecycle. This OpenMP path forks or wakes a team **every** outer time step (`#pragma omp for nowait` on the interior, `critical` on the global min/max). That is the knob that will hurt.
 
 | Variant | Time (s) | FLOP/s |
 |---------|----------|--------|
 | seq | 4.882 | 4.92e9 |
 | omp -p1 | 6.988 | 3.43e9 |
 
-Worse than seq with no parallel work. Add threads:
+Worse than seq with no parallel work: fork/join tax, zero payoff. The reported FLOP/s looks artificially low because time blew up on overhead. Add threads:
 
 | Variant | Time (s) | FLOP/s |
 |---------|----------|--------|
@@ -109,7 +111,7 @@ Worse than seq with no parallel work. Add threads:
 | omp -p1 | 6.988 | 3.43e9 |
 | omp -p8 | 4.583 | 5.24e9 |
 
-Barely clears seq. Then 16:
+Barely clears seq. Parallel row work and `nowait` help a little, but not enough to catch AVX2 or pth-8. Then 16:
 
 | Variant | Time (s) | FLOP/s |
 |---------|----------|--------|
@@ -124,15 +126,7 @@ flowchart LR
   O8 --> O16["omp-p16 · 6.803 s"]
 ```
 
-`-p16` regresses below seq again. Best overall across the whole shootout remains **pthreads at 8 threads**.
-
----
-
-## Why OpenMP lost to pthreads
-
-The dominant cost on this micro-benchmark is **fork/join tax**. Creating or waking an OpenMP team **2000 times** (once per time step) buys little when each step is already cache-friendly work split across rows. Pthreads stay alive; they hit a **barrier** per iteration but skip repeated team setup.
-
-At 8 threads, pthreads overlap interior rows cleanly after the halo barrier. OpenMP's `-p8` only nudges past seq because parallel row work and **`nowait`** help, but not enough to catch AVX2 or pth-8.
+`-p16` regresses below seq again, and the regression is sharper than pthreads. Creating or waking an OpenMP team **2000 times** buys little when each step is already short, cache-friendly work. Pthreads stay alive and only barrier; OpenMP pays team lifecycle every iteration. Best overall across the whole shootout remains **pthreads at 8 threads**.
 
 ---
 
