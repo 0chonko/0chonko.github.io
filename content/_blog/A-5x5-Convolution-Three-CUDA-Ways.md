@@ -1,47 +1,12 @@
 ---
 title: "A 5×5 Convolution, Three CUDA Ways"
 date: 2026-10-13
-description: "Performance ladder for a fixed 4096×4096 stencil: naive, shared tile, then constant-mask broadcast, with kernel time, GPix/s, and the PCIe wall-clock caveat."
+description: "Progressive kernel results on a fixed 4096×4096 stencil: naive, then shared tile, then constant-mask broadcast, with GPix/s and the PCIe wall-clock caveat."
 ---
 
 A 5×5 image stencil looks like a textbook GPU exercise until you ask where the bytes actually come from. On an RTX 3060 Ti (Ampere, `sm_86`, CUDA 13.2), I wanted three CUDA variants on the same problem: global-memory naive, shared-memory tile, shared tile plus **constant memory** for the mask. The interesting part is not that shared memory helps (it usually does), but how much a broadcast-friendly mask buys you once the compare is honest about grid size and normalization.
 
-The upstream repo shipped mismatched shapes (1024 vs 12800). I patched every variant to **4096×4096**, **5×5 filter divided by 35**, block **32×16**, and checked **TEST PASSED** before trusting timings.
-
-## Data path: naive vs shared vs constant
-
-Each thread owns one output pixel. A 5×5 stencil reads 25 neighbors per output. The three kernels differ in where those neighbors live during the multiply-add.
-
-```mermaid
-flowchart LR
-  subgraph naive["Naive (global)"]
-    G1[(global image)] -->|25 loads / output| R1[registers]
-    M1[(global mask)] --> R1
-    R1 --> O1[global out]
-  end
-
-  subgraph shared["Shared tile"]
-    G2[(global image)] -->|cooperative tile load| SM[(2880 B smem)]
-    SM --> R2[registers]
-    M2[(global mask)] --> R2
-    R2 --> O2[global out]
-  end
-
-  subgraph constant["Shared + constant mask"]
-    G3[(global image)] -->|cooperative tile load| SM2[(2880 B smem)]
-    C[(100 B cmem)] -->|broadcast| R3[registers]
-    SM2 --> R3
-    R3 --> O3[global out]
-  end
-```
-
-Naive: every tap hits global memory for image and mask. Shared: one halo tile per block, one `__syncthreads`, mask still from global. Constant: tile reuse stays; the 25 mask weights sit in constant memory and broadcast across the warp.
-
----
-
-## Build, ptxas, kernel times
-
-Hardware: **RTX 3060 Ti**, **sm_86**, **CUDA 13.2**. Three timed runs per kernel; I kept the stable minimum each time.
+The upstream repo shipped mismatched shapes (1024 vs 12800). I patched every variant to **4096×4096**, **5×5 filter divided by 35**, block **32×16**, and checked **TEST PASSED** before trusting timings. Hardware: **RTX 3060 Ti**, **sm_86**, **CUDA 13.2**. Three timed runs per kernel; I kept the stable minimum. Output rate is `4096² / t` from kernel time only.
 
 ```bash
 make clean && make
@@ -49,64 +14,66 @@ make clean && make
 nvcc --ptxas-options=-v -c convolution_*.cu   # per translation unit
 ```
 
-**ptxas resource summary**
+---
 
-| Variant | Registers | Shared mem | Constant |
-|---------|-----------|------------|----------|
-| Naive | 16 | 0 | 0 |
-| Shared tile | 40 | 2880 B | 0 |
-| Shared + constant mask | 36 | 2880 B | 100 B (`cmem[3]`) |
+## Performance for 4096×4096 convolution
 
-Barriers: naive **1**; both shared paths **1** (tile fill + compute).
+Each thread owns one output pixel. A 5×5 stencil reads 25 neighbors per output. Same grid for every step; each step adds one kernel and keeps the earlier bars in view.
 
-### Performance for 4096×4096 convolution
+### 1. Naive (global)
 
-Fixed grid, same filter and block shape, min of three kernel runs. Output rate is `4096² / t` (pixels per second from kernel time only). Relative time is vs the naive kernel.
+Every tap hits global memory for image and mask. 16 registers, no shared, no constant.
 
-| Step | Kernel | Time | vs naive | Output rate |
-|------|--------|------|----------|-------------|
-| 1. Naive (global) | global image + mask | ~1.58 ms | 1.00× | ~10.6 GPix/s |
-| 2. Shared tile | + 2880 B smem halo | ~1.51 ms | 1.05× | ~11.1 GPix/s |
-| 3. Shared + constant mask | + 100 B `__constant__` mask | ~1.15 ms | 1.37× | ~14.6 GPix/s |
+| Kernel | Time | Output rate |
+|--------|------|-------------|
+| Naive | ~1.58 ms | ~10.6 GPix/s |
 
 ```mermaid
 flowchart LR
-  S1["1. Naive · 1.58 ms"] --> S2["2. Shared tile · 1.51 ms"]
-  S2 --> S3["3. Shared + cmem · 1.15 ms"]
+  N["Naive · 1.58 ms · 10.6 GPix/s"]
 ```
 
-The middle step barely moves (~4%): Ampere L2 already absorbs a lot of the stencil traffic. The constant-memory mask is the bar that pays (~27% off shared).
+### 2. Shared tile
 
-Example console shape (numbers from one stable run):
+Cooperative halo load into **2880 B** shared memory, one `__syncthreads`, mask still from global. Registers climb to 40. Ampere's L2 already does real work for the stencil, so the win is small:
 
-```text
-Grid: 4096 x 4096, block 32 x 16, filter 5 x 5 / 35
-TEST PASSED
-naive kernel:     ~1.58 ms
-shared kernel:    ~1.51 ms
-constant kernel:  ~1.15 ms
-H2D copy:         ~24-26 ms
-D2H copy:         ~24-26 ms
-wall clock:       ~50 ms class (transfer-heavy)
+| Kernel | Time | Output rate |
+|--------|------|-------------|
+| Naive | ~1.58 ms | ~10.6 GPix/s |
+| Shared tile | ~1.51 ms | ~11.1 GPix/s |
+
+```mermaid
+flowchart LR
+  N["Naive · 1.58 ms"] --> S["Shared · 1.51 ms"]
 ```
+
+About **4%** off naive. Tiling alone is not the story here.
+
+### 3. Shared + constant mask
+
+Keep the tile. Put the 25 identical mask weights in **`__constant__`** (100 B, `cmem[3]`) so they broadcast across the warp instead of 25 extra global loads per output. Registers drop to 36 vs the shared-only path:
+
+| Kernel | Time | Output rate |
+|--------|------|-------------|
+| Naive | ~1.58 ms | ~10.6 GPix/s |
+| Shared tile | ~1.51 ms | ~11.1 GPix/s |
+| Shared + constant mask | ~1.15 ms | ~14.6 GPix/s |
+
+```mermaid
+flowchart LR
+  N["Naive · 1.58 ms"] --> S["Shared · 1.51 ms"]
+  S --> C["Shared + cmem · 1.15 ms"]
+```
+
+That is the bar that pays: ~**27%** off shared, **1.37×** vs naive. Optimize what repeats (mask) and what overlaps (image halo), on fair dimensions.
 
 The repo also has an **OpenACC** path on **10000×10000**; that is a different toolchain and size, not a fourth CUDA kernel in this A/B.
 
 ---
 
-## Why constant + shared wins here
-
-**Tile reuse** is the first win. A 32×16 output block with a 5×5 stencil needs a halo; staging that tile in **2880 B** of shared memory cuts repeated global traffic for interior pixels. That alone only nudges naive (~1.58 ms) toward shared (~1.51 ms): Ampere's L2 is doing real work anyway, and register pressure rises (16 → 40 regs).
-
-**Mask in constant memory** is the second win. The 5×5 weights are identical for every thread. Loading them from global each tap adds 25 extra global transactions per output that do not scale with image reuse. **`__constant__`** gives warp-wide broadcast: one read can serve many lanes. That shows up in both ptxas (36 regs vs 40) and the ~**27%** kernel drop (~1.51 → ~1.15 ms) on top of tiling.
-
-I read this as a small memory-hierarchy story: optimize what repeats (mask) and what overlaps (image halo), then verify with **fair dimensions** so you are not comparing a tiny grid against a monster.
-
----
-
 ## Caveat: PCIe still owns the clock
 
-Kernel optimization is real but **not** what dominated wall time in this harness. Keep transfers off the ladder above; they get their own line:
+Kernel optimization is real but **not** what dominated wall time in this harness. Transfers stay off the ladder:
 
 | Path | Time (approx.) |
 |------|----------------|
@@ -114,7 +81,7 @@ Kernel optimization is real but **not** what dominated wall time in this harness
 | H2D + D2H | ~48–52 ms |
 | Wall clock (transfer-heavy) | ~50 ms class |
 
-Report kernel A/B first (controlled problem size, `TEST PASSED`), then say the end-to-end app is transfer-bound until inputs live on the GPU across iterations.
+Report kernel steps first (`TEST PASSED`), then say the end-to-end app is transfer-bound until inputs live on the GPU across iterations.
 
 What I would check next:
 
