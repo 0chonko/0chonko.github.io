@@ -133,24 +133,39 @@ NewVal = f(Left, Right, Up, Down)
 
 ![Heat Diffusion Grid Update Pattern](/assets/blog/simulating-a-cache-with/heat-diffusion.png)
 
-I implemented five iterative software variants to study their cache footprints:
+I implemented five iterative software variants on the same heat grid and the same **32 kB** simulated L1, changing one software knob at a time.
 
-### 1. Naive
-Instantiated redundant local variables and performed unoptimized, cell-by-cell calculations. This served as a low-performance baseline.
+### Performance for OpenMP heat diffusion (software ladder)
 
-### 2. Improved Array Access
-Optimized the loops to use direct pointer arithmetic and eliminated redundant memory writes, ensuring clean sequential reads along the rows.
+| Step | Variant | Change | Effect on the run |
+|------|---------|--------|-------------------|
+| 1 | Naive | cell-by-cell, redundant locals | low-performance baseline |
+| 2 | Improved array access | pointer arithmetic, fewer redundant writes | cleaner sequential row traffic |
+| 3 | Loop tiling 16×16 | cache blocking for the 32 kB L1 | time down; **cache requests ~½** (hit rate dips slightly on cold block entry) |
+| 4 | Small tiling 8×8 | tighter tiles | diminishing returns: loop overhead and spatial fragmentation start to hurt |
+| 5 | Cache-aligned OpenMP | `schedule(static, chunk_size)` on 32-byte lines | modest cut in invalidations vs default scheduling |
 
-### 3. Loop Tiling (Cache Blocking)
-To maximize temporal locality, I restructured the grid traversal into 16×16 blocks (tiles).
+```mermaid
+flowchart LR
+  S1["1. Naive"] --> S2["2. Array access"]
+  S2 --> S3["3. Tile 16x16"]
+  S3 --> S4["4. Tile 8x8"]
+  S4 --> S5["5. Aligned OMP"]
+```
 
-Instead of sweeping across the entire matrix (which easily evicts older rows before they can be reused for the next step), tiling keeps active working sets entirely within the 32 kB L1 cache.
+Step 3 is the bar that pays (fewer bus-facing requests, lower time). Step 4 is the useful flat/worse step: smaller tiles do not keep helping. Step 5 is a smaller coherence win on top of tiling, not another big time cliff.
 
-### 4. Small Tiling
-Reduced the tile size to 8×8 to observe the point of diminishing returns, where loop overhead and spatial fragmentation begin to degrade performance.
+### What each step did
 
-### 5. Cache-Aligned OpenMP Scheduling
-To mitigate false sharing (where two threads write to different variables on the same cache line), I matched OpenMP's static chunk sizing to our simulated cache line boundaries:
+**1. Naive.** Redundant local variables and unoptimized, cell-by-cell calculations.
+
+**2. Improved array access.** Direct pointer arithmetic and fewer redundant memory writes so row reads stay sequential.
+
+**3. Loop tiling (16×16).** Keep the active working set inside the 32 kB L1 instead of sweeping the whole matrix and evicting rows before reuse.
+
+**4. Small tiling (8×8).** Same blocking idea at a size where overhead starts to dominate.
+
+**5. Cache-aligned OpenMP scheduling.** Match static chunk sizing to the simulated cache line to cut false sharing:
 
 ```cpp
 const int cacheLineSize = 32; // 32 bytes
@@ -160,17 +175,11 @@ const int chunk_size = ((M + doublesPerCacheLine - 1) / doublesPerCacheLine) * d
 #pragma omp parallel for schedule(static, chunk_size)
 ```
 
-### Microarchitectural Results & Insights
-
-The metrics gathered from these iterations highlight the importance of software-hardware co-design:
-
-*   **The Tiling Impact:** Implementing 16×16 tiling drastically reduced overall execution time and total memory transactions. Even though the cache *hit rate* dropped slightly due to the initial cold misses of entering a block, the total number of cache requests dropped by nearly half, significantly reducing pressure on the bus.
+Detail plots for hit rate and total memory accesses across these variants:
 
 | Hit Rates | Total Memory Accesses |
 | :---: | :---: |
 | ![](/assets/blog/simulating-a-cache-with/heat-hitrates.png) | ![](/assets/blog/simulating-a-cache-with/heat-memory-accesses.png) |
-
-*   **Tuning OpenMP:** Custom static scheduling that aligned loop chunks to 32-byte cache line boundaries yielded modest but consistent reductions in invalidations compared to default scheduling, proving that informing software design with hardware parameters pays off.
 
 ---
 
