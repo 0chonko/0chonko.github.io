@@ -133,39 +133,78 @@ NewVal = f(Left, Right, Up, Down)
 
 ![Heat Diffusion Grid Update Pattern](/assets/blog/simulating-a-cache-with/heat-diffusion.png)
 
-I implemented five iterative software variants on the same heat grid and the same **32 kB** simulated L1, changing one software knob at a time.
+I walked five software variants on the same heat grid and the same **32 kB** simulated L1. Same problem size each time; each step adds one result and keeps the earlier ones in view.
 
-### Performance for OpenMP heat diffusion (software ladder)
+### Performance for OpenMP heat diffusion
 
-| Step | Variant | Change | Effect on the run |
-|------|---------|--------|-------------------|
-| 1 | Naive | cell-by-cell, redundant locals | low-performance baseline |
-| 2 | Improved array access | pointer arithmetic, fewer redundant writes | cleaner sequential row traffic |
-| 3 | Loop tiling 16×16 | cache blocking for the 32 kB L1 | time down; **cache requests ~½** (hit rate dips slightly on cold block entry) |
-| 4 | Small tiling 8×8 | tighter tiles | diminishing returns: loop overhead and spatial fragmentation start to hurt |
-| 5 | Cache-aligned OpenMP | `schedule(static, chunk_size)` on 32-byte lines | modest cut in invalidations vs default scheduling |
+#### 1. Naive
+
+Redundant locals, cell-by-cell updates. Low-performance baseline.
+
+| Variant | What we saw |
+|---------|-------------|
+| Naive | baseline time and cache traffic |
 
 ```mermaid
 flowchart LR
-  S1["1. Naive"] --> S2["2. Array access"]
-  S2 --> S3["3. Tile 16x16"]
-  S3 --> S4["4. Tile 8x8"]
-  S4 --> S5["5. Aligned OMP"]
+  N["Naive · baseline"]
 ```
 
-Step 3 is the bar that pays (fewer bus-facing requests, lower time). Step 4 is the useful flat/worse step: smaller tiles do not keep helping. Step 5 is a smaller coherence win on top of tiling, not another big time cliff.
+#### 2. Improved array access
 
-### What each step did
+Pointer arithmetic, fewer redundant writes, sequential row reads.
 
-**1. Naive.** Redundant local variables and unoptimized, cell-by-cell calculations.
+| Variant | What we saw |
+|---------|-------------|
+| Naive | baseline |
+| Improved array access | cleaner sequential traffic; modest improvement over naive |
 
-**2. Improved array access.** Direct pointer arithmetic and fewer redundant memory writes so row reads stay sequential.
+```mermaid
+flowchart LR
+  N["Naive"] --> A["Array access"]
+```
 
-**3. Loop tiling (16×16).** Keep the active working set inside the 32 kB L1 instead of sweeping the whole matrix and evicting rows before reuse.
+#### 3. Loop tiling 16×16
 
-**4. Small tiling (8×8).** Same blocking idea at a size where overhead starts to dominate.
+Cache-block the grid so the active working set fits in the 32 kB L1 instead of sweeping the whole matrix and evicting rows before reuse.
 
-**5. Cache-aligned OpenMP scheduling.** Match static chunk sizing to the simulated cache line to cut false sharing:
+| Variant | What we saw |
+|---------|-------------|
+| Naive | baseline |
+| Improved array access | modest gain |
+| Tile 16×16 | **time down**; **cache requests ~½** (hit rate dips slightly on cold block entry) |
+
+```mermaid
+flowchart LR
+  N["Naive"] --> A["Array access"]
+  A --> T16["Tile 16x16 · ~½ requests"]
+```
+
+This is the step that pays.
+
+#### 4. Small tiling 8×8
+
+Same blocking idea, tighter tiles.
+
+| Variant | What we saw |
+|---------|-------------|
+| Naive | baseline |
+| Improved array access | modest gain |
+| Tile 16×16 | ~½ cache requests, lower time |
+| Tile 8×8 | diminishing returns: loop overhead and spatial fragmentation start to hurt |
+
+```mermaid
+flowchart LR
+  N["Naive"] --> A["Array access"]
+  A --> T16["Tile 16x16"]
+  T16 --> T8["Tile 8x8 · flat/worse"]
+```
+
+Useful flat/worse bar: smaller is not automatically better.
+
+#### 5. Cache-aligned OpenMP scheduling
+
+Match static chunk sizing to the 32-byte simulated line to cut false sharing:
 
 ```cpp
 const int cacheLineSize = 32; // 32 bytes
@@ -174,6 +213,24 @@ const int chunk_size = ((M + doublesPerCacheLine - 1) / doublesPerCacheLine) * d
 
 #pragma omp parallel for schedule(static, chunk_size)
 ```
+
+| Variant | What we saw |
+|---------|-------------|
+| Naive | baseline |
+| Improved array access | modest gain |
+| Tile 16×16 | ~½ cache requests, lower time |
+| Tile 8×8 | diminishing returns |
+| Cache-aligned OpenMP | modest cut in invalidations vs default scheduling |
+
+```mermaid
+flowchart LR
+  N["Naive"] --> A["Array access"]
+  A --> T16["Tile 16x16"]
+  T16 --> T8["Tile 8x8"]
+  T8 --> O["Aligned OMP"]
+```
+
+A smaller coherence win on top of tiling, not another big time cliff.
 
 Detail plots for hit rate and total memory accesses across these variants:
 
@@ -193,4 +250,3 @@ If I were to take this simulator to the next level, I would focus on:
 3.  **Detailed False Sharing Metrics:** Adding dedicated hardware counters inside the simulator to explicitly track "Invalidation-on-Write-to-Shared-Line" events, helping software developers pinpoint false sharing automatically.
 
 This project gave me a solid feel for cycle-approximate modeling, and it connects in hindsight to the cache-line and false-sharing instincts I later needed when profiling GPU collectives on Snellius.
-```
