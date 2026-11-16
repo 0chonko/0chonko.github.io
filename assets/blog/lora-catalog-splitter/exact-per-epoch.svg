@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Exact match out of 93 per epoch checkpoint for six LoRA runs">
+<rect width="760" height="420" fill="#ffffff"/>
+<text x="20" y="24" font-weight="600" fill="#1a1a1a">Exact match per epoch checkpoint (clean gold, 93 rows, fixed parser)</text>
+<line x1="60" y1="360.0" x2="510" y2="360.0" stroke="#e6e6e6"/><text x="52" y="364.0" text-anchor="end" fill="#555">45</text>
+<line x1="60" y1="325.6" x2="510" y2="325.6" stroke="#e6e6e6"/><text x="52" y="329.6" text-anchor="end" fill="#555">50</text>
+<line x1="60" y1="291.1" x2="510" y2="291.1" stroke="#e6e6e6"/><text x="52" y="295.1" text-anchor="end" fill="#555">55</text>
+<line x1="60" y1="256.7" x2="510" y2="256.7" stroke="#e6e6e6"/><text x="52" y="260.7" text-anchor="end" fill="#555">60</text>
+<line x1="60" y1="222.2" x2="510" y2="222.2" stroke="#e6e6e6"/><text x="52" y="226.2" text-anchor="end" fill="#555">65</text>
+<line x1="60" y1="187.8" x2="510" y2="187.8" stroke="#e6e6e6"/><text x="52" y="191.8" text-anchor="end" fill="#555">70</text>
+<line x1="60" y1="153.3" x2="510" y2="153.3" stroke="#e6e6e6"/><text x="52" y="157.3" text-anchor="end" fill="#555">75</text>
+<line x1="60" y1="118.9" x2="510" y2="118.9" stroke="#e6e6e6"/><text x="52" y="122.9" text-anchor="end" fill="#555">80</text>
+<line x1="60" y1="84.4" x2="510" y2="84.4" stroke="#e6e6e6"/><text x="52" y="88.4" text-anchor="end" fill="#555">85</text>
+<line x1="60" y1="50.0" x2="510" y2="50.0" stroke="#e6e6e6"/><text x="52" y="54.0" text-anchor="end" fill="#555">90</text>
+<text x="60.0" y="378" text-anchor="middle" fill="#555">1</text>
+<text x="172.5" y="378" text-anchor="middle" fill="#555">2</text>
+<text x="285.0" y="378" text-anchor="middle" fill="#555">3</text>
+<text x="397.5" y="378" text-anchor="middle" fill="#555">4</text>
+<text x="510.0" y="378" text-anchor="middle" fill="#555">5</text>
+<text x="285" y="398" text-anchor="middle" fill="#1a1a1a">epoch</text>
+<text x="18" y="205" transform="rotate(-90 18 205)" text-anchor="middle" fill="#1a1a1a">exact / 93</text>
+<polyline points="60.0,339.3 172.5,222.2 285.0,270.4" fill="none" stroke="#b5b5b5" stroke-width="2"/>
+<circle cx="60.0" cy="339.3" r="3" fill="#ffffff" stroke="#b5b5b5" stroke-width="2"/>
+<circle cx="172.5" cy="222.2" r="4.5" fill="#b5b5b5" stroke="#b5b5b5" stroke-width="2"/>
+<circle cx="285.0" cy="270.4" r="3" fill="#ffffff" stroke="#b5b5b5" stroke-width="2"/>
+<line x1="530" y1="60" x2="554" y2="60" stroke="#b5b5b5" stroke-width="2"/>
+<text x="560" y="64" fill="#1a1a1a">Run 1: r8,</text>
+<text x="560" y="79" fill="#555">512 ctx, 3 ep (dirty)</text>
+<polyline points="60.0,208.4 172.5,194.7 285.0,167.1 397.5,187.8 510.0,215.3" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+<circle cx="60.0" cy="208.4" r="3" fill="#ffffff" stroke="#7f8c8d" stroke-width="2"/>
+<circle cx="172.5" cy="194.7" r="3" fill="#ffffff" stroke="#7f8c8d" stroke-width="2"/>
+<circle cx="285.0" cy="167.1" r="4.5" fill="#7f8c8d" stroke="#7f8c8d" stroke-width="2"/>
+<circle cx="397.5" cy="187.8" r="3" fill="#ffffff" stroke="#7f8c8d" stroke-width="2"/>
+<circle cx="510.0" cy="215.3" r="3" fill="#ffffff" stroke="#7f8c8d" stroke-width="2"/>
+<line x1="530" y1="100" x2="554" y2="100" stroke="#7f8c8d" stroke-width="2"/>
+<text x="560" y="104" fill="#1a1a1a">Run 4: + 5 ep,</text>
+<text x="560" y="119" fill="#555">hard oversample (dirty)</text>
+<polyline points="60.0,194.7 172.5,180.9 285.0,160.2 397.5,187.8 510.0,194.7" fill="none" stroke="#e0a030" stroke-width="2"/>
+<circle cx="60.0" cy="194.7" r="3" fill="#ffffff" stroke="#e0a030" stroke-width="2"/>
+<circle cx="172.5" cy="180.9" r="3" fill="#ffffff" stroke="#e0a030" stroke-width="2"/>
+<circle cx="285.0" cy="160.2" r="4.5" fill="#e0a030" stroke="#e0a030" stroke-width="2"/>
+<circle cx="397.5" cy="187.8" r="3" fill="#ffffff" stroke="#e0a030" stroke-width="2"/>
+<circle cx="510.0" cy="194.7" r="3" fill="#ffffff" stroke="#e0a030" stroke-width="2"/>
+<line x1="530" y1="140" x2="554" y2="140" stroke="#e0a030" stroke-width="2"/>
+<text x="560" y="144" fill="#1a1a1a">Run 5: + MLP projections (dirty)</text>
+<polyline points="60.0,174.0 172.5,160.2 285.0,153.3 397.5,180.9 510.0,180.9" fill="none" stroke="#3b6ea5" stroke-width="2"/>
+<circle cx="60.0" cy="174.0" r="3" fill="#ffffff" stroke="#3b6ea5" stroke-width="2"/>
+<circle cx="172.5" cy="160.2" r="3" fill="#ffffff" stroke="#3b6ea5" stroke-width="2"/>
+<circle cx="285.0" cy="153.3" r="4.5" fill="#3b6ea5" stroke="#3b6ea5" stroke-width="2"/>
+<circle cx="397.5" cy="180.9" r="3" fill="#ffffff" stroke="#3b6ea5" stroke-width="2"/>
+<circle cx="510.0" cy="180.9" r="3" fill="#ffffff" stroke="#3b6ea5" stroke-width="2"/>
+<line x1="530" y1="180" x2="554" y2="180" stroke="#3b6ea5" stroke-width="2"/>
+<text x="560" y="184" fill="#1a1a1a">Run 5 recipe,</text>
+<text x="560" y="199" fill="#555">clean data</text>
+<polyline points="60.0,118.9 172.5,98.2 285.0,91.3 397.5,105.1 510.0,112.0" fill="none" stroke="#c0392b" stroke-width="2"/>
+<circle cx="60.0" cy="118.9" r="3" fill="#ffffff" stroke="#c0392b" stroke-width="2"/>
+<circle cx="172.5" cy="98.2" r="3" fill="#ffffff" stroke="#c0392b" stroke-width="2"/>
+<circle cx="285.0" cy="91.3" r="4.5" fill="#c0392b" stroke="#c0392b" stroke-width="2"/>
+<circle cx="397.5" cy="105.1" r="3" fill="#ffffff" stroke="#c0392b" stroke-width="2"/>
+<circle cx="510.0" cy="112.0" r="3" fill="#ffffff" stroke="#c0392b" stroke-width="2"/>
+<line x1="530" y1="220" x2="554" y2="220" stroke="#c0392b" stroke-width="2"/>
+<text x="560" y="224" fill="#1a1a1a">Same,</text>
+<text x="560" y="239" fill="#555">1.7B model</text>
+<polyline points="60.0,153.3 172.5,139.6 285.0,112.0 397.5,98.2 510.0,105.1" fill="none" stroke="#1f4470" stroke-width="3"/>
+<circle cx="60.0" cy="153.3" r="3" fill="#ffffff" stroke="#1f4470" stroke-width="2"/>
+<circle cx="172.5" cy="139.6" r="3" fill="#ffffff" stroke="#1f4470" stroke-width="2"/>
+<circle cx="285.0" cy="112.0" r="3" fill="#ffffff" stroke="#1f4470" stroke-width="2"/>
+<circle cx="397.5" cy="98.2" r="4.5" fill="#1f4470" stroke="#1f4470" stroke-width="2"/>
+<circle cx="510.0" cy="105.1" r="3" fill="#ffffff" stroke="#1f4470" stroke-width="2"/>
+<line x1="530" y1="260" x2="554" y2="260" stroke="#1f4470" stroke-width="3"/>
+<text x="560" y="264" fill="#1a1a1a">700M,</text>
+<text x="560" y="279" fill="#555">clean + long catalogs, 4096 ctx</text>
+<text x="530" y="312" fill="#555">filled dot = best checkpoint</text>
+</svg>
