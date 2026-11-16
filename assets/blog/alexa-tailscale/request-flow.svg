@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 450" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Sequence: Echo, Alexa, Lambda, hook, agent, MCP. The hook waits up to 5.5 s inside the roughly 8 s skill budget">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+    </marker>
+    <marker id="arrT" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e0a030"/>
+    </marker>
+  </defs>
+  <rect width="760" height="450" fill="#ffffff"/>
+
+  <!-- lifelines: x = 110, 230, 350, 470, 590, 700 -->
+  <g stroke="#b5b5b5" stroke-width="1.5">
+    <line x1="110" y1="56" x2="110" y2="410"/><line x1="230" y1="56" x2="230" y2="410"/>
+    <line x1="350" y1="56" x2="350" y2="410"/><line x1="470" y1="56" x2="470" y2="410"/>
+    <line x1="590" y1="56" x2="590" y2="410"/><line x1="700" y1="56" x2="700" y2="410"/>
+  </g>
+  <rect x="70" y="20" width="80" height="36" rx="4" fill="#ffffff" stroke="#1a1a1a"/>
+  <g fill="#3b6ea5">
+    <rect x="190" y="20" width="80" height="36" rx="4"/><rect x="310" y="20" width="80" height="36" rx="4"/>
+  </g>
+  <g fill="#1f4470">
+    <rect x="430" y="20" width="80" height="36" rx="4"/><rect x="550" y="20" width="80" height="36" rx="4"/>
+    <rect x="660" y="20" width="80" height="36" rx="4"/>
+  </g>
+  <text x="110" y="42" text-anchor="middle" fill="#1a1a1a">Echo</text>
+  <g fill="#ffffff" text-anchor="middle">
+    <text x="230" y="42">Alexa</text><text x="350" y="42">Lambda</text><text x="470" y="42">Hook</text>
+    <text x="590" y="42">Agent</text><text x="700" y="42">MCP</text>
+  </g>
+
+  <!-- hook wait window -->
+  <rect x="464" y="186" width="12" height="160" fill="#dde6f0" stroke="#1f4470"/>
+
+  <!-- requests -->
+  <g stroke="#1a1a1a" stroke-width="1.5" fill="none" marker-end="url(#arr)">
+    <line x1="110" y1="90" x2="228" y2="90"/>
+    <line x1="230" y1="122" x2="348" y2="122"/>
+    <path d="M350,140 h30 v16 h-28"/>
+    <line x1="476" y1="218" x2="588" y2="218"/>
+    <line x1="590" y1="250" x2="698" y2="250"/>
+  </g>
+  <line x1="350" y1="186" x2="462" y2="186" stroke="#e0a030" stroke-width="2.5" marker-end="url(#arrT)"/>
+  <!-- replies -->
+  <g stroke="#1a1a1a" stroke-width="1.5" stroke-dasharray="5 3" fill="none" marker-end="url(#arr)">
+    <line x1="700" y1="282" x2="592" y2="282"/>
+    <line x1="590" y1="314" x2="478" y2="314"/>
+    <line x1="350" y1="378" x2="112" y2="378"/>
+  </g>
+  <line x1="464" y1="346" x2="352" y2="346" stroke="#e0a030" stroke-width="2.5" stroke-dasharray="5 3" marker-end="url(#arrT)"/>
+
+  <g fill="#1a1a1a" font-size="11" text-anchor="middle">
+    <text x="170" y="84">utterance</text>
+    <text x="290" y="116">skill JSON</text>
+    <text x="406" y="180">POST /alexa + Bearer</text>
+    <text x="536" y="212">agent --resume chatId</text>
+    <text x="645" y="244">tools</text>
+    <text x="645" y="276">results</text>
+    <text x="532" y="308">plain text</text>
+    <text x="406" y="340">speech JSON</text>
+    <text x="230" y="372">speaks reply</text>
+  </g>
+  <text x="386" y="152" font-size="11" fill="#1a1a1a">SOCKS5 via tailscaled</text>
+
+  <!-- timing notes -->
+  <g fill="#1f4470" font-size="11">
+    <text x="484" y="340">waits ≤ 5.5 s, else “On it.”</text>
+  </g>
+  <g stroke="#c0392b" stroke-width="1.5" fill="none">
+    <path d="M60,90 h-8 v288 h8"/>
+  </g>
+  <text x="40" y="234" font-size="11" fill="#c0392b" text-anchor="middle" transform="rotate(-90 40 234)">≈ 8 s skill budget</text>
+
+  <!-- legend -->
+  <g font-size="11" fill="#1a1a1a">
+    <line x1="20" y1="425" x2="44" y2="425" stroke="#e0a030" stroke-width="2.5"/><text x="50" y="429">tailnet hop</text>
+    <line x1="130" y1="425" x2="154" y2="425" stroke="#1a1a1a" stroke-width="1.5" stroke-dasharray="5 3"/><text x="160" y="429">reply</text>
+  </g>
+  <text x="220" y="429" font-size="10" fill="#5a5a5a">Schematic, not measured. Vertical spacing is not to time scale.</text>
+</svg>

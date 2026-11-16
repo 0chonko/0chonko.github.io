@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 290" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Synchronous NVML query blocks the benchmark thread between sends; with an async profiler thread on another CPU core, sends run back to back">
+  <defs>
+    <pattern id="idle" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#f1f1f1"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#b5b5b5" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="760" height="290" fill="#ffffff"/>
+
+  <!-- A: synchronous -->
+  <text x="20" y="24" font-weight="600" fill="#1a1a1a">A. Synchronous: query NVML on the benchmark thread</text>
+  <text x="140" y="60" text-anchor="end" fill="#1a1a1a">Benchmark thread</text>
+  <g stroke="#ffffff">
+    <rect x="150" y="44" width="30" height="24" fill="#e0a030"/>
+    <rect x="180" y="44" width="420" height="24" fill="#c0392b"/>
+    <rect x="600" y="44" width="30" height="24" fill="#e0a030"/>
+  </g>
+  <text x="390" y="60" text-anchor="middle" fill="#ffffff">NVML / DCGM query: user → kernel space, thread blocked</text>
+  <text x="150" y="86" font-size="11" fill="#5a5a5a">send</text>
+  <text x="600" y="86" font-size="11" fill="#5a5a5a">next send waits</text>
+
+  <!-- B: async -->
+  <text x="20" y="124" font-weight="600" fill="#1a1a1a">B. Async: detached profiler thread on a free CPU core</text>
+  <g fill="#1a1a1a" text-anchor="end">
+    <text x="140" y="158">Benchmark thread</text><text x="140" y="194">Profiler thread</text>
+  </g>
+  <g stroke="#ffffff" fill="#e0a030">
+    <rect x="150" y="142" width="30" height="24"/><rect x="190" y="142" width="30" height="24"/>
+    <rect x="230" y="142" width="30" height="24"/><rect x="270" y="142" width="30" height="24"/>
+    <rect x="310" y="142" width="30" height="24"/><rect x="350" y="142" width="30" height="24"/>
+  </g>
+  <text x="392" y="158" font-size="11" fill="#5a5a5a">… all sends done, atomic stop signal</text>
+  <g stroke="#ffffff">
+    <rect x="150" y="178" width="50" height="24" fill="#3b6ea5"/>
+    <rect x="200" y="178" width="200" height="24" fill="url(#idle)"/>
+    <rect x="400" y="178" width="50" height="24" fill="#3b6ea5"/>
+    <rect x="450" y="178" width="200" height="24" fill="url(#idle)"/>
+  </g>
+  <g fill="#ffffff" text-anchor="middle" font-size="11">
+    <text x="175" y="194">poll</text><text x="425" y="194">poll</text>
+  </g>
+
+  <!-- legend -->
+  <g font-size="11" fill="#1a1a1a">
+    <rect x="20" y="232" width="12" height="12" fill="#e0a030"/><text x="38" y="242">GPU transfer (as short as 0.010 ms)</text>
+    <rect x="250" y="232" width="12" height="12" fill="#3b6ea5"/><text x="268" y="242">NVML / DCGM poll</text>
+    <rect x="390" y="232" width="12" height="12" fill="#c0392b"/><text x="408" y="242">blocking query</text>
+    <rect x="510" y="232" width="12" height="12" fill="url(#idle)" stroke="#b5b5b5"/><text x="528" y="242">idle</text>
+  </g>
+  <text x="20" y="276" font-size="10" fill="#5a5a5a">Schematic, not measured. Not to scale: the query can take far longer than the transfer it interrupts.</text>
+</svg>

@@ -4,25 +4,25 @@ date: 2024-09-01
 description: "How to capture microsecond-level GPU power metrics using NVML and DCGM APIs without interfering with high-speed network transfers."
 ---
 
-One of the most frustrating aspects of performance engineering is the **observer effect**: the very act of profiling a system can alter its behavior. This is particularly true when analyzing high-speed GPU communications, where message transfers complete on microsecond scales. 
+A frustrating part of performance engineering is the **observer effect**: profiling a system can change how it behaves. This is especially true for fast GPU communication, where transfers finish in microseconds.
 
-During my research into the energy footprint of GPU interconnects on NVIDIA A100 and H100 devices, I kept running into the same problem: high-level profilers like PAPI, Likwid, or NVIDIA Nsight either lacked the permissions I needed in multi-tenant environments, or they added overhead I could not ignore. Calling NVML and DCGM APIs synchronously during small transfers (1-byte to 1-kilobyte messages) noticeably degraded the bandwidth numbers I was trying to measure.
+While studying the energy cost of GPU interconnects on NVIDIA A100 and H100 devices, I kept hitting the same problem. High-level profilers like PAPI, Likwid, or NVIDIA Nsight either lacked permissions in multi-tenant environments or added too much overhead. Calling the NVML and DCGM APIs synchronously during small transfers (1-byte to 1-kilobyte messages) visibly lowered the bandwidth I was trying to measure.
 
-This post covers the async detached profiler I built to get around that.
+This post covers the async, detached profiler I built to avoid that.
 
-## The Problem: The High Cost of Querying the Driver
-Standard GPU monitoring libraries, such as the **NVIDIA Management Library (NVML)** and **NVIDIA Data Center GPU Manager (DCGM)**, operate close to the driver level. 
+## The Problem: Querying the Driver Is Expensive
+The **NVIDIA Management Library (NVML)** and **NVIDIA Data Center GPU Manager (DCGM)** work close to the driver.
 
-However, making synchronous API calls to retrieve GPU performance metrics requires transitioning from user space to kernel space. When executing micro-benchmarks, such as Peer-to-Peer CUDA IPC transfers that take as little as `0.010ms`, the latency of the NVML/DCGM API call itself can easily swallow the benchmark's execution time and skew the bandwidth results.
+A synchronous metric query switches from user space to kernel space. In micro-benchmarks like Peer-to-Peer CUDA IPC transfers, which can take as little as `0.010ms`, the query itself can take longer than the benchmark and skew the bandwidth results.
 
-![Figure 1. Synchronous NVML queries block the critical path; async polling does not](/assets/blog/measuring-without-mutating/sync-vs-async.png)
+![Figure 1. Synchronous NVML queries block the critical path; async polling does not](/assets/blog/measuring-without-mutating/sync-vs-async.svg)
 
-## Architectural Solution: The Asynchronous Detached Profiler
+## The Fix: An Asynchronous Detached Profiler
 
-To solve the observer effect, I decoupled the benchmark execution from the metric polling.
+I separated the benchmark from the metric polling.
 
-### 1. Detached Thread Execution
-Instead of calling the profiler inside the critical path of the GPU communication loop, the profiling logic is isolated into a separate C++ header file. The master thread initiates the benchmark, but immediately spawns a detached, asynchronous thread assigned to an arbitrary, free CPU core on the host node.
+### 1. A Detached Thread
+The profiler lives in its own C++ header, outside the GPU communication loop. The main thread starts the benchmark and immediately spawns a detached thread on a free CPU core.
 
 ```
 // Detached thread initialization inside the benchmark harness
@@ -35,22 +35,22 @@ void start_power_profile(std::string experiment_name, int device_id) {
 }
 ```
 
-This detached thread runs asynchronously. When all GPU transfers are completed, a simple atomic signal from the master thread terminates the profiler loop and joins the data collection thread.
+When all GPU transfers finish, an atomic signal from the main thread stops the profiler loop and joins the collection thread.
 
-### 2. Incorporating Inter-Transmission Delays (25ms)
-Simply offloading the profiler to a separate thread is not enough. If the detached thread queries the NVML API as fast as possible, it will waste CPU cycles and trigger driver bottlenecks. 
+### 2. A 25ms Delay Between Transfers
+A separate thread is not enough. If it queries NVML as fast as it can, it wastes CPU cycles and creates driver bottlenecks.
 
-Furthermore, NVIDIA hardware performance counters have a built-in sampling rate limit. The driver will happily answer at any time, but most of those answers are **cached duplicates**: if you query 50 times in under 20ms, the hardware registers have not updated yet, so you just burn CPU for a flatline.
+Also, NVIDIA's hardware counters update at a limited rate. The driver answers at any time, but most answers are **cached duplicates**: 50 queries in under 20ms mostly return the same value, so you burn CPU for a flat line.
 
-To address this, I introduced a precise **25ms inter-transmission delay** within the benchmark loop. The goal is not denser sampling; it is to **maximize the windows where a sample is actually fresh**:
-1.  Host transfers and profiler polls land near hardware update edges instead of in the long cached stretches.
-2.  We gathered high-fidelity, dynamic power draw curves instead of a flatline of cached data.
-3.  The CPU overhead of driver queries remained virtually non-existent.
+So I added a **25ms delay between transfers** in the benchmark loop. The goal is not more samples; it is **more fresh samples**:
+1.  Transfers and profiler polls land near hardware updates instead of in long cached stretches.
+2.  We got detailed, changing power curves instead of a flat line of cached data.
+3.  The CPU cost of driver queries stayed close to zero.
 
-![Figure 2. Hardware fresh vs cached windows; naive polling vs 25ms-aligned host and profiler samples](/assets/blog/measuring-without-mutating/profiler-timeline.png)
+![Figure 2. Hardware fresh vs cached windows; naive polling vs 25ms-aligned host and profiler samples](/assets/blog/measuring-without-mutating/profiler-timeline.svg)
 
-## API Selection: NVML vs. DCGM
-When designing the tool, we used both libraries where each one was strongest:
+## NVML vs. DCGM
+We used each library for what it does best:
 
 | Library / Metric | API Call / Counter ID | Best Used For |
 | :--- | :--- | :--- |
@@ -60,12 +60,12 @@ When designing the tool, we used both libraries where each one was strongest:
 | **DCGM** NVLink | `DCGM_FI_PROF_NVLINK_TX_BYTES`| Measuring real NVLink link utilization |
 | **DCGM** SM Active | `DCGM_FI_PROF_SM_ACTIVE` | Streaming Multiprocessor activity ratio |
 
-By wrapping these APIs into a lightweight C++ class that outputs per-device CSV datasets, we ended up with something flexible enough to chase the PCIe fallback behavior I later wrote about in the UCX post. I have not tried running it inside a fully contained Apptainer image yet, which is probably where permissions get ugly again.
+Wrapped in a small C++ class that writes per-device CSV files, this was flexible enough to chase the PCIe fallback I later wrote about in the UCX post. I have not run it inside a fully contained Apptainer image yet; that is probably where permissions get ugly again.
 
-## Key Design Lessons
-1.  **Isolate Profiling Logic:** Never mix your telemetry gathering with your hot execution path. Use detached threads mapped to unused CPU cores.
-2.  **Respect Driver Sampling Rates:** Querying GPU performance counters faster than they physically update yields duplicate data and introduces driver latency. Introduce deliberate delays to match the hardware's internal sampling rate.
-3.  **Establish a Baseline:** Always run a native sanity-check run without the profiler. If the bandwidth of the profiled run matches the native baseline, you have successfully avoided the observer effect.
+## Design Lessons
+1.  **Keep profiling off the hot path:** use detached threads on unused CPU cores.
+2.  **Respect the counter update rate:** querying faster than counters update gives duplicates and adds driver latency. Add delays that match the hardware's sampling rate.
+3.  **Compare against a baseline:** run once without the profiler. If the profiled bandwidth matches, you avoided the observer effect.
 
 ---
 

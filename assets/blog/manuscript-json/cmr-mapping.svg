@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 285" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Raw document goes through LLM and rules into a canonical metadata representation; one mapper per backend produces that backend's JSON">
+  <defs>
+    <marker id="arr" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5a5a5a"/>
+    </marker>
+  </defs>
+  <rect width="760" height="285" fill="#ffffff"/>
+  <text x="20" y="24" font-weight="600" fill="#1a1a1a">Extract once into a canonical form; only the mapper changes per backend</text>
+
+  <rect x="20" y="100" width="110" height="44" fill="#e8eef5" stroke="#3b6ea5" stroke-width="1.2"/>
+  <rect x="160" y="100" width="100" height="44" fill="#3b6ea5"/>
+  <rect x="290" y="100" width="90" height="44" fill="#1f4470"/>
+  <g fill="#ffffff" stroke="#e0a030" stroke-width="1.5">
+    <rect x="410" y="50" width="100" height="44"/><rect x="410" y="150" width="100" height="44"/>
+    <rect x="545" y="42" width="200" height="60"/><rect x="545" y="142" width="200" height="60"/>
+  </g>
+
+  <g text-anchor="middle">
+    <text x="75" y="126" fill="#1f4470">Raw document</text>
+    <text x="210" y="126" fill="#ffffff">LLM / rules</text>
+    <text x="335" y="126" fill="#ffffff" font-weight="600">CMR</text>
+    <text x="460" y="76" fill="#1a1a1a">Mapper A</text><text x="460" y="176" fill="#1a1a1a">Mapper B</text>
+    <text x="645" y="60" fill="#1a1a1a" font-weight="600">Backend A JSON</text>
+    <text x="645" y="160" fill="#1a1a1a" font-weight="600">Backend B JSON</text>
+  </g>
+  <g font-size="10.5" fill="#5a5a5a" text-anchor="middle">
+    <text x="645" y="77">Shelfmark, Author,</text><text x="645" y="92">Title, Dating</text>
+    <text x="645" y="177">InventoryID, Creator,</text><text x="645" y="192">WorkName, Century</text>
+  </g>
+
+  <g stroke="#5a5a5a" stroke-width="1.5" marker-end="url(#arr)">
+    <line x1="130" y1="122" x2="159" y2="122"/><line x1="260" y1="122" x2="289" y2="122"/>
+    <line x1="380" y1="116" x2="409" y2="76"/><line x1="380" y1="128" x2="409" y2="168"/>
+    <line x1="510" y1="72" x2="544" y2="72"/><line x1="510" y1="172" x2="544" y2="172"/>
+  </g>
+
+  <g stroke="#1a1a1a" fill="none">
+    <path d="M20,222 V228 H380 V222"/><path d="M410,222 V228 H745 V222"/>
+  </g>
+  <g font-size="11" fill="#1a1a1a" text-anchor="middle">
+    <text x="200" y="246">Reused: extraction engine, decoder, evaluation</text>
+    <text x="577" y="246">Swapped when the backend schema changes</text>
+  </g>
+  <text x="20" y="274" font-size="10" fill="#5a5a5a">Schematic, not measured. CMR = canonical metadata representation.</text>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="PGAS: one logical address space split into per-node partitions; rank 0 writes into rank 1's segment with one-sided RDMA">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <rect width="760" height="250" fill="#ffffff"/>
+
+  <text x="380" y="22" text-anchor="middle" font-weight="600" fill="#1a1a1a">One logical address space, physically split across nodes</text>
+  <rect x="40" y="62" width="680" height="64" fill="none" stroke="#1a1a1a" stroke-dasharray="4 3"/>
+
+  <g stroke="#1a1a1a" fill="#f4f4f4">
+    <rect x="50" y="70" width="200" height="48"/><rect x="280" y="70" width="200" height="48"/><rect x="510" y="70" width="200" height="48"/>
+  </g>
+  <g fill="#3b6ea5" stroke="#1f4470">
+    <rect x="110" y="78" width="120" height="32"/><rect x="340" y="78" width="120" height="32"/><rect x="570" y="78" width="120" height="32"/>
+  </g>
+  <g fill="#ffffff" font-size="11" text-anchor="middle">
+    <text x="170" y="98">segment 0</text><text x="400" y="98">segment 0</text><text x="630" y="98">segment 0</text>
+  </g>
+  <g fill="#1a1a1a" font-size="11">
+    <text x="58" y="92" font-weight="600">Node 0</text><text x="288" y="92" font-weight="600">Node 1</text><text x="518" y="92" font-weight="600">Node N</text>
+    <text x="58" y="106" fill="#5a5a5a">RAM</text><text x="288" y="106" fill="#5a5a5a">RAM</text><text x="518" y="106" fill="#5a5a5a">RAM</text>
+  </g>
+
+  <path d="M200,78 C230,38 330,38 360,76" fill="none" stroke="#e0a030" stroke-width="2.5" marker-end="url(#arr)"/>
+  <text x="280" y="40" text-anchor="middle" fill="#a06a00" font-size="11">gaspi_write_notify (one-sided RDMA)</text>
+
+  <g stroke="#1a1a1a" fill="#ffffff">
+    <rect x="100" y="170" width="100" height="34"/><rect x="330" y="170" width="100" height="34"/><rect x="560" y="170" width="100" height="34"/>
+  </g>
+  <g fill="#1a1a1a" text-anchor="middle">
+    <text x="150" y="192">Rank 0 CPU</text><text x="380" y="192">Rank 1 CPU</text><text x="610" y="192">Rank N CPU</text>
+  </g>
+  <line x1="150" y1="168" x2="150" y2="120" stroke="#1a1a1a" marker-end="url(#arr)" marker-start="url(#arr)"/>
+  <text x="158" y="148" font-size="11" fill="#1a1a1a">local load/store</text>
+  <text x="380" y="222" text-anchor="middle" font-size="11" fill="#5a5a5a">keeps computing, no matching receive</text>
+
+  <text x="380" y="242" text-anchor="middle" font-size="11" fill="#5a5a5a">Segment = pinned, NIC-registered memory. Remote data is addressed as (rank, segment id, offset).</text>
+</svg>

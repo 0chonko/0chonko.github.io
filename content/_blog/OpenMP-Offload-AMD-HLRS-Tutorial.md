@@ -4,33 +4,33 @@ date: 2025-10-22
 description: "What I took away from HLRS's two-day course on OpenMP target offload, unified shared memory on MI300A, discrete-GPU data environments, and ROCm profiling. [Certificate](/assets/blog/openmp-offload-hlrs-tutorial/personal-certificate.pdf)"
 ---
 
-Most of my GPU work so far has been CUDA-centric: kernels, NVLink bandwidth, power profiling on A100 and H100 nodes. OpenMP on CPUs I know from cache-line tuning in a SystemC simulator and from MPI+OpenMP hybrid jobs on Snellius. But **OpenMP target offload** on AMD hardware was a gap, and it kept showing up in the same conversations as portability and Fortran weather codes.
+Most of my GPU work has been CUDA: kernels, NVLink bandwidth, power profiling on A100 and H100 nodes. CPU OpenMP I know from cache-line tuning in a SystemC simulator and from MPI+OpenMP hybrid jobs on Snellius. **OpenMP target offload** on AMD was a gap, and it kept coming up next to portability and Fortran weather codes.
 
-I spent two days in an online tutorial at **HLRS** on **OpenMP offloading with AMD GPUs**, working through exercises on the **AMD Accelerator Cloud (AAC)** against **MI300A** APUs. The course walked from "add a `#pragma omp target` and hope" to understanding when unified shared memory actually removes copies, when you need explicit `map` clauses on discrete GPUs, and how to read `LIBOMPTARGET_KERNEL_TRACE` before reaching for `rocprofv3`. These are my condensed notes, plus where I think this connects to the MPI and profiling work I have been doing elsewhere.
+So I spent two days in an online **HLRS** tutorial on **OpenMP offloading with AMD GPUs**, doing exercises on the **AMD Accelerator Cloud (AAC)** against **MI300A** APUs. The course went from "add a `#pragma omp target` and hope" to knowing when unified shared memory really removes copies, when discrete GPUs need explicit `map` clauses, and why you read `LIBOMPTARGET_KERNEL_TRACE` before opening `rocprofv3`. These are my condensed notes, plus how they connect to my MPI and profiling work.
 
 ---
 
 ## Why Another GPU Programming Model?
 
-CUDA and HIP give you fine control. OpenMP's pitch is different: keep a **standard directive-based model** that composes with host-side threading and ports across vendors. On AMD, the stack is **ROCm + LLVM-based `amdclang`/`amdflang`**, with target offload wired into the same compiler you use for host OpenMP.
+CUDA and HIP give fine control. OpenMP offers a **standard directive-based model** that composes with host threading and ports across vendors. On AMD the stack is **ROCm + LLVM-based `amdclang`/`amdflang`**, with offload built into the same compiler you use for host OpenMP.
 
-The tutorial framed the decision less as ideology and more as economics:
+The tutorial framed the choice as economics, not ideology:
 
 * **APUs (MI300A)** share one physical memory pool between CPU and GPU. Porting a CPU loop can be almost mechanical if you accept unified shared memory semantics.
-* **Discrete GPUs (MI300X and friends)** still need explicit data environments. The directives look similar; the runtime behavior is not.
-* **Fortran production codes** (weather, climate, chemistry) are already OpenMP-heavy on the host. Target offload is the path of least resistance compared to rewriting hot loops in HIP.
+* **Discrete GPUs (MI300X and friends)** still need explicit data environments. The directives look the same; the runtime behavior does not.
+* **Fortran production codes** (weather, climate, chemistry) are already OpenMP-heavy on the host. Offload is much less work than rewriting hot loops in HIP.
 
-That last point landed when Johanna Potyka walked through **CLOUDSC** and other ECMWF-style mini-apps: the question is not "can OpenMP express this kernel?" but "how far does `target teams distribute parallel do collapse(...)` get you before compiler quirks and data-movement costs bite?"
+That last point landed when Johanna Potyka walked through **CLOUDSC** and other ECMWF-style mini-apps. The question is not "can OpenMP express this kernel?" but "how far does `target teams distribute parallel do collapse(...)` get you before compiler quirks and data movement bite?"
 
 ---
 
-## Hardware Context: MI300A as an APU, Not a Bolt-On GPU
+## Hardware: MI300A Is an APU, Not a Bolt-On GPU
 
-Before any pragmas, the course spent time on architecture taxonomy. An **APU** is not just a GPU glued to a CPU socket. On MI300A, CPU chiplets and CDNA3 compute dies share **128 GB HBM3** in a unified address space. No separate host DRAM and device HBM to shuttle between over PCIe.
+An **APU** is not a GPU glued to a CPU socket. On MI300A, CPU chiplets and CDNA3 compute dies share **128 GB HBM3** in one address space. There is no separate host DRAM and device HBM to shuttle data between over PCIe.
 
-![Figure 1. Discrete MI300X host/GPU memory versus MI300A unified HBM3](/assets/blog/openmp-offload-hlrs-tutorial/discrete-vs-apu.png)
+![Figure 1. Discrete MI300X host/GPU memory versus MI300A unified HBM3](/assets/blog/openmp-offload-hlrs-tutorial/discrete-vs-apu.svg)
 
-For porting, that split matters immediately:
+For porting, that matters right away:
 
 | Mode | Typical hardware | Data movement | What you add in source |
 | :--- | :--- | :--- | :--- |
@@ -38,29 +38,29 @@ For porting, that split matters immediately:
 | USM on discrete | MI300X + page migration | Zero-copy via XNACK | `#pragma omp requires unified_shared_memory` + `HSA_XNACK=1` |
 | APU zero-copy | MI300A | No redundant copies in the common case | USM pragma or `-fopenmp-force-usm` |
 
-The exercises ran on **aac6** (open ROCm 6.4.1) and **aac7** (HPE Cray Programming Environment on production MI300A). With 50+ participants, the SLURM etiquette was part of the lesson: `salloc` with `--gpus=1` and `--mem` capped below a full node so four people could share one machine.
+Exercises ran on **aac6** (open ROCm 6.4.1) and **aac7** (HPE Cray Programming Environment on production MI300A). With 50+ participants, SLURM etiquette was part of the lesson: `salloc --gpus=1` with `--mem` capped below a full node, so four people could share a machine.
 
 ---
 
 ## Day 1: Unified Shared Memory and the First Surprise
 
-### USM: pointers that mean the same thing everywhere
+### USM: the same pointer everywhere
 
-**Unified Shared Memory (USM)** is an OpenMP contract, not just a ROCm feature. You declare it once per translation unit:
+**Unified Shared Memory (USM)** is an OpenMP contract, not just a ROCm feature. Declare it once per translation unit:
 
 ```cpp
 #pragma omp requires unified_shared_memory
 ```
 
-On AMD, you also need **XNACK** enabled at compile time (`--offload-arch=gfx942`) and runtime:
+On AMD you also need **XNACK** at compile time (`--offload-arch=gfx942`) and at runtime:
 
 ```bash
 export HSA_XNACK=1
 ```
 
-With USM active, `map` clauses become optional. Host pointers passed into `target` regions can trigger **page migration** on discrete hardware, or direct access on MI300A without the copy dance.
+With USM, `map` clauses become optional. Host pointers used in `target` regions trigger **page migration** on discrete hardware, or direct access on MI300A with no copies.
 
-The mental model from Michael Klemm's slides: without USM you wrap compute in a data environment that uploads at the opening brace and downloads at the close. With USM you can often write:
+Michael Klemm's mental model: without USM, you wrap compute in a data environment that uploads at the opening brace and downloads at the closing one. With USM you can often write:
 
 ```cpp
 #pragma omp requires unified_shared_memory
@@ -78,15 +78,15 @@ for (int i = 0; i < M; i++)
 // host reads out[] without an explicit map(from:)
 ```
 
-That is the fastest on-ramp for porting CPU OpenMP loops. The course was explicit that it is not free performance: migration has its own cost, and mixing USM with `map` on the same buffers changes access semantics to coarse grain.
+That is the fastest way to port CPU OpenMP loops. It is not free: migration has a cost, and mixing USM with `map` on the same buffers switches access semantics to coarse grain.
 
-### Offload is not parallelism (and my first broken saxpy)
+### Offload is not parallelism (my first broken saxpy)
 
-This was the first debugging cliff in the exercises. A lone `#pragma omp target` transfers control to the device **sequentially and synchronously**. It does not create a GPU parallel team. You still need `teams distribute parallel for` (or the Fortran `do` equivalent).
+First debugging cliff. A lone `#pragma omp target` moves execution to the device **sequentially and synchronously**. It does not create a parallel team. You still need `teams distribute parallel for` (or the Fortran `do` form).
 
-Worse, my first Fortran saxpy "worked" (checksum matched) but `LIBOMPTARGET_KERNEL_TRACE=1` showed **1 team x 256 threads** and miserable occupancy. The kernel ran on the GPU; it just did not use it.
+My first Fortran saxpy "worked" (checksum matched), but `LIBOMPTARGET_KERNEL_TRACE=1` showed **1 team x 256 threads** and terrible occupancy. It ran on the GPU without using it.
 
-MI300A exposes **228 CUs** with **64-wide wavefronts**. OpenMP cannot easily span the entire device with a flat `parallel for` the way you might imagine from CPU threading. The fix is multi-level parallelism:
+MI300A has **228 CUs** with **64-wide wavefronts**. A flat `parallel for` will not fill that the way CPU threading intuition suggests. You need multi-level parallelism:
 
 ```cpp
 #pragma omp target teams distribute parallel for
@@ -94,13 +94,13 @@ for (int i = 0; i < n; i++)
   y[i] = a * x[i] + y[i];
 ```
 
-On the GPU, `teams` maps to workgroups, `distribute` tiles the iteration space across them, and `parallel for` fills each CU with wavefronts. AMD's compilers ignore host `simd` on device code anyway; the hierarchy is the whole story.
+`teams` maps to workgroups, `distribute` splits the iterations across them, and `parallel for` fills each CU with wavefronts. AMD's compilers ignore host `simd` on device code anyway; the hierarchy is the whole story.
 
-### Discrete memory: when USM is off, maps are the contract
+### Discrete memory: without USM, maps are the contract
 
-The second lecture block switched to **discrete-GPU semantics** even on AAC hardware, by setting `HSA_XNACK=0` and using explicit maps.
+The second block switched to **discrete-GPU semantics** on the same AAC hardware, by setting `HSA_XNACK=0` and using explicit maps.
 
-A minimal saxpy with tracing told the story better than the slides alone. Running the same kernel twice with `LIBOMPTARGET_KERNEL_TRACE=2`:
+A minimal saxpy with `LIBOMPTARGET_KERNEL_TRACE=2`, run twice, said more than the slides:
 
 ```text
 Call data_submit_async: 450us  ... 4194304 bytes
@@ -109,9 +109,9 @@ Call data_retrieve_async: 204us ... 4194304 bytes
 Call data_delete:         99us
 ```
 
-Four megabytes each way, twice, for two back-to-back target invocations. The kernel itself was **43 microseconds**. This is the discrete-GPU trap in one log line: you can "successfully offload" and still spend two orders of magnitude more time moving data than computing.
+Four megabytes each way, twice, for two back-to-back target calls. The kernel took **43 microseconds**. That is the discrete-GPU trap in one log: a "successful offload" can spend far more time moving data than computing.
 
-The fix is not a fancier pragma on a single call. It is **persistent data environments**:
+The fix is not a fancier pragma on one call. It is **persistent data environments**:
 
 ```cpp
 #pragma omp target data map(to: a[:N], b[:N]) map(tofrom: c[:N])
@@ -122,7 +122,7 @@ The fix is not a fancier pragma on a single call. It is **persistent data enviro
 }
 ```
 
-Or the unscoped variant for longer-lived state:
+Or the unscoped form for longer-lived state:
 
 ```fortran
 !$omp target enter data map(to: input(1:N)) map(alloc: tmp(1:N))
@@ -130,7 +130,7 @@ Or the unscoped variant for longer-lived state:
 !$omp target exit data map(from: res) map(delete: tmp)
 ```
 
-`target update` bridges host-side changes into an existing device environment without tearing the whole map down. That pattern is what separates a demo from something that could survive a time step loop.
+`target update` pushes host-side changes into an existing device environment without tearing down the map. That is what separates a demo from something that survives a time-step loop.
 
 ---
 
@@ -138,7 +138,7 @@ Or the unscoped variant for longer-lived state:
 
 ### Fortran defaults will race on you
 
-The application-examples session opened with a trap I would have walked into. In Fortran:
+The application session opened with a trap I would have walked into:
 
 ```fortran
 real(kind=rt) :: tmp = 0.0_rt   ! initialized declaration
@@ -150,42 +150,42 @@ do i = 1, 10000
 end do
 ```
 
-Output flickers every run. Why? An initialized local variable is a **SAVE** variable in Fortran, which OpenMP treats like a **shared** module variable. Every iteration races on `tmp`. Remove the initialization (making `tmp` a true local) or use `default(none)` with explicit `private(tmp)`.
+The output changes every run. In Fortran an initialized local is a **SAVE** variable, which OpenMP treats as **shared**, so every iteration races on `tmp`. Drop the initialization (making `tmp` a true local) or use `default(none)` with `private(tmp)`.
 
-The course recommendation was blunt: on device code, **`default(none)`** unless you have a good reason not to. Same spirit as verifying UCX transport on Snellius: assumptions that hold on CPU OpenMP silently break on GPU.
+The advice was blunt: on device code use **`default(none)`** unless you have a reason not to. Same spirit as verifying the UCX transport on Snellius: assumptions that hold for CPU OpenMP break silently on the GPU.
 
-### SPMD mode and not splitting your pragmas
+### SPMD mode: do not split your pragmas
 
-Another compiler-facing detail: **`target teams distribute parallel for` on one line** (Fortran: continuation with `&`) encourages **SPMD** code generation. Splitting:
+**`target teams distribute parallel for` on one line** (Fortran: continue with `&`) encourages **SPMD** code generation. Splitting it:
 
 ```fortran
 !$omp target
 !$omp teams distribute parallel do
 ```
 
-can produce different outlining and optimization paths depending on the compiler. Not always wrong, but the course treated gratuitous separation as a portability smell.
+can lead to different outlining and optimization depending on the compiler. Not always wrong, but the course treated needless splitting as a portability smell.
 
-### Weather mini-apps: collapse is not infinite
+### Weather mini-apps: collapse has limits
 
-CLOUDSC and related kernels stress **column-parallel weather physics**: lots of independent columns, deep loop nests, Fortran array syntax. The porting question becomes how aggressively `collapse` can fuse loop dimensions before register pressure and cache behavior on CDNA3 push back.
+CLOUDSC and similar kernels stress **column-parallel weather physics**: many independent columns, deep loop nests, Fortran array syntax. The question is how far `collapse` can fuse loops before register pressure and cache behavior on CDNA3 push back.
 
-Practical guidance from the examples:
+From the examples:
 
 * Port **compute-heavy loops** first; leave `workshare` and array-syntax assignments for later.
-* OpenMP 6.0 introduces `workdistribute` for whole-array operations, but **no compiler in the room implemented it yet**. The workaround is a `distribute parallel do` over indices.
-* **`allocate` inside a target loop** is fragile (broken on CCE 18 in one example; possible with `amdflang` and `-lflang_rt.hostdevice`, but slow). Hoist allocations outside the kernel.
+* OpenMP 6.0 adds `workdistribute` for whole-array operations, but **no compiler in the room implemented it yet**. Workaround: `distribute parallel do` over indices.
+* **`allocate` inside a target loop** is fragile (broken on CCE 18 in one example; works with `amdflang` and `-lflang_rt.hostdevice`, but slowly). Hoist allocations out of the kernel.
 
 ### Jacobi and OpenFOAM-style porting
 
-The slides also walked Jacobi solvers and CFD mini-apps (OpenFOAM-related examples in the materials), emphasizing the same loop: get correctness with USM on APU, then turn off XNACK and rebuild data environments for discrete-GPU performance, then profile before micro-optimizing launch parameters.
+The Jacobi solvers and CFD mini-apps (OpenFOAM-related examples in the materials) followed the same loop: get correctness with USM on the APU, then turn off XNACK and add data environments for discrete-GPU performance, then profile before tuning launch parameters.
 
 ---
 
 ## Profiling: Start Cheap, Then Open the ROCm Toolbox
 
-Luka Stanisic's profiling block mirrored how I approach Snellius jobs: **free introspection first**, heavy tools only when you know what question you are asking.
+Luka Stanisic's profiling block matched how I work on Snellius: **free introspection first**, heavy tools only once you know the question.
 
-### Layer 0: runtime printf from libomptarget
+### Layer 0: libomptarget runtime output
 
 Before `rocprofv3`:
 
@@ -195,7 +195,7 @@ export LIBOMPTARGET_KERNEL_TRACE=2   # adds timing for kernels and data transfer
 export LIBOMPTARGET_INFO=$((0x20 | 0x02 | 0x01 | 0x10))  # verbose data movement
 ```
 
-On the saxpy exercise, level 2 was enough to prove the bottleneck was `data_submit_async`, not kernel launch.
+For the saxpy exercise, level 2 was enough to show the bottleneck was `data_submit_async`, not the kernel launch.
 
 ### Layer 1: rocprofv3 for timelines and hotspots
 
@@ -206,24 +206,24 @@ rocprofv3 --kernel-trace --stats --summary -- ./my_openmp_app
 rocprofv3 --sys-trace --output-format pftrace -- ./my_openmp_app
 ```
 
-For OpenMP offload, `--kernel-trace` (or `--sys-trace`) captures GPU dispatches initiated by target regions. It does **not** profile host-side OpenMP parallel regions, which is a gap to remember when you have hybrid host/device parallelism.
+`--kernel-trace` (or `--sys-trace`) captures GPU dispatches from target regions. It does **not** profile host-side OpenMP parallel regions, a gap to remember for hybrid host/device code.
 
-Open the `.pftrace` in [Perfetto](https://ui.perfetto.dev/) and you can correlate H2D copies, kernel boxes, and HSA activity on one timeline. The course exercise pointed at `HPCTrainingExamples/Rocprofv3/OpenMP/`.
+Open the `.pftrace` in [Perfetto](https://ui.perfetto.dev/) to line up H2D copies, kernels, and HSA activity on one timeline. The exercise lives in `HPCTrainingExamples/Rocprofv3/OpenMP/`.
 
-### Layer 2: rocprof-compute for kernel autopsy
+### Layer 2: rocprof-compute for one kernel
 
-When you know *which* `__omp_offloading_*` kernel hurts, **rocprof-compute** (formerly Omniperf) replays the app to collect hardware counters and roofline data:
+Once you know *which* `__omp_offloading_*` kernel hurts, **rocprof-compute** (formerly Omniperf) replays the app to collect hardware counters and roofline data:
 
 ```bash
 rocprof-compute profile -n my_kernel -- ./my_openmp_app
 rocprof-compute analyze -p workloads/my_kernel/<gpu_arch>/
 ```
 
-OpenMP outlining can obscure source names in profiles; the tool keys off **dispatch IDs** and launch geometry, which still expose whether you launched one team or hundreds.
+OpenMP outlining can hide source names; the tool keys off **dispatch IDs** and launch geometry, which still show whether you launched one team or hundreds.
 
-### Layer 3: rocprof-sys for whole-program context
+### Layer 3: rocprof-sys for the whole program
 
-**rocprof-sys** (formerly Omnitrace) is the choice when you need host threads, GPU activity, and eventually MPI in one trace. Overkill for a saxpy exercise; relevant when OpenMP offload sits inside a multi-rank job.
+**rocprof-sys** (formerly Omnitrace) puts host threads, GPU activity, and eventually MPI in one trace. Overkill for saxpy; useful when offload sits inside a multi-rank job.
 
 | Tool | Best for | OpenMP offload caveat |
 | :--- | :--- | :--- |
@@ -236,26 +236,26 @@ OpenMP outlining can obscure source names in profiles; the tool keys off **dispa
 
 ## What This Connects To (and What I Have Not Tried)
 
-This course sits next to several threads from my own work without replacing any of them:
+The course sits next to several threads of my own work:
 
-* **CUDA energy profiling** taught me to separate measurement overhead from the phenomenon. `LIBOMPTARGET_KERNEL_TRACE=2` is the same instinct for offload: read the transfer lines before optimizing kernel tile sizes.
-* **UCX/MPI on Snellius** was about proving the runtime took the fast path. OpenMP offload has an analogue: USM with `HSA_XNACK=1` vs explicit maps with `HSA_XNACK=0` are different machines. Mixing them without noticing is the silent fallback.
-* **SystemC OpenMP cache tuning** was host-only, but the Fortran `SAVE` variable pitfall is the same class of bug: language semantics you internalized on CPU do not evaporate on GPU.
-* **GASPI/HPC communication** is farther up the stack, yet the Jacobi and ghost-exchange examples in the broader HLRS materials hint at where GPU-aware MPI and OpenMP offload eventually meet.
+* **CUDA energy profiling** taught me to separate measurement overhead from the effect. `LIBOMPTARGET_KERNEL_TRACE=2` is the same instinct: read the transfer lines before tuning tile sizes.
+* **UCX/MPI on Snellius** was about proving the runtime took the fast path. Offload has the same issue: USM with `HSA_XNACK=1` and explicit maps with `HSA_XNACK=0` are different machines, and mixing them without noticing is the silent fallback.
+* **SystemC OpenMP cache tuning** was host-only, but the Fortran `SAVE` pitfall is the same class of bug: CPU language semantics do not disappear on the GPU.
+* **GASPI/HPC communication** is further up the stack, but the Jacobi and ghost-exchange examples in the HLRS materials hint at where GPU-aware MPI and offload meet.
 
-What I have not validated myself: whether a production weather kernel ported with USM on MI300A, then tightened with `target data` for MI300X, beats a hand-tuned HIP port on the same science case. And I have not run `rocprofv3` on an OpenMP+MPI job at scale. Those feel like the natural follow-ups, not another pass through the slides.
+What I have not checked myself: whether a production weather kernel ported with USM on MI300A, then tightened with `target data` for MI300X, beats a hand-tuned HIP port on the same case. I also have not run `rocprofv3` on an OpenMP+MPI job at scale. Those are the natural next steps, not another pass through the slides.
 
 ---
 
 ## Practical Takeaways
 
-1. **Treat `target` and `parallel` as separate decisions.** Offload moves execution; `teams distribute parallel for` creates GPU parallelism. A correct checksum with 1x256 threads is a failed port.
-2. **Pick your memory model deliberately.** USM plus `HSA_XNACK=1` for fast CPU-to-GPU migration on APUs; explicit `target data` / `enter data` when XNACK is off or copies must be minimized.
+1. **`target` and `parallel` are separate decisions.** Offload moves execution; `teams distribute parallel for` creates GPU parallelism. A correct checksum with 1x256 threads is a failed port.
+2. **Pick the memory model on purpose.** USM plus `HSA_XNACK=1` for fast CPU-to-GPU porting on APUs; explicit `target data` / `enter data` when XNACK is off or copies must be minimal.
 3. **Read `LIBOMPTARGET_KERNEL_TRACE=2` before rocprof.** If `data_submit_async` dominates `launch_kernel`, fix data persistence before touching tile sizes.
-4. **Use `default(none)` on device loops.** Fortran initialized locals are `SAVE` and therefore shared. This will race.
-5. **Keep `target teams distribute` fused when you can.** SPMD outlining is compiler-sensitive; don't split pragmas without a measured reason.
-6. **Profile GPU dispatches with `rocprofv3 --kernel-trace`.** Host OpenMP and device offload are different subsystems; the tool only sees one of them.
-7. **Verify on your architecture flag.** `--offload-arch=gfx942` for MI300A in AAC; discrete MI300X is the same ISA but a different memory story at runtime.
+4. **Use `default(none)` on device loops.** Initialized Fortran locals are `SAVE`, so shared, so they race.
+5. **Keep `target teams distribute` fused.** SPMD outlining is compiler-sensitive; do not split pragmas without a measured reason.
+6. **Profile GPU dispatches with `rocprofv3 --kernel-trace`.** Host OpenMP and device offload are different subsystems; the tool only sees one.
+7. **Check your architecture flag.** `--offload-arch=gfx942` for MI300A on AAC; MI300X uses the same ISA but behaves differently at runtime because of memory.
 
 ---
 
@@ -268,4 +268,3 @@ What I have not validated myself: whether a production weather kernel ported wit
 * Full list: [All references](/readinglist/).
 
 ---
-

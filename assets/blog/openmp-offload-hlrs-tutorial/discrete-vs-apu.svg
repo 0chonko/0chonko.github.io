@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Discrete MI300X: host DRAM and GPU HBM joined by PCIe with explicit map copies. MI300A: CPU chiplets and GPU dies share 128 GB HBM3">
+  <defs>
+    <marker id="arr" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e0a030"/>
+    </marker>
+  </defs>
+  <rect width="760" height="340" fill="#ffffff"/>
+
+  <rect x="20" y="40" width="350" height="250" fill="#ffffff" stroke="#b5b5b5"/>
+  <rect x="390" y="40" width="350" height="250" fill="#ffffff" stroke="#b5b5b5"/>
+  <g font-weight="600" fill="#1a1a1a">
+    <text x="20" y="28">A. Discrete GPU (MI300X): two memories</text>
+    <text x="390" y="28">B. APU (MI300A): one memory</text>
+  </g>
+
+  <!-- A -->
+  <rect x="50" y="62" width="290" height="46" fill="#1f4470"/>
+  <rect x="50" y="210" width="290" height="46" fill="#3b6ea5"/>
+  <g fill="#ffffff" text-anchor="middle">
+    <text x="195" y="90">CPU + host DRAM</text><text x="195" y="238">GPU compute + device HBM</text>
+  </g>
+  <rect x="180" y="108" width="30" height="102" fill="#f1f1f1" stroke="#b5b5b5"/>
+  <text transform="translate(199,159) rotate(-90)" text-anchor="middle" font-size="11" fill="#5a5a5a">PCIe</text>
+  <g stroke="#e0a030" stroke-width="3" marker-end="url(#arr)">
+    <line x1="150" y1="114" x2="150" y2="204"/><line x1="240" y1="204" x2="240" y2="114"/>
+  </g>
+  <g font-size="11" fill="#1a1a1a">
+    <text x="142" y="156" text-anchor="end">map(to:)</text><text x="142" y="170" text-anchor="end">H2D copy</text>
+    <text x="248" y="156">map(from:)</text><text x="248" y="170">D2H copy</text>
+  </g>
+  <text x="195" y="278" text-anchor="middle" font-size="11" fill="#5a5a5a">Copies unless USM + HSA_XNACK=1 migrates pages</text>
+
+  <!-- B -->
+  <rect x="420" y="62" width="135" height="46" fill="#1f4470"/>
+  <rect x="575" y="62" width="135" height="46" fill="#3b6ea5"/>
+  <g fill="#ffffff" text-anchor="middle">
+    <text x="487" y="90">CPU chiplets</text>
+    <text x="642" y="81">CDNA3 GPU dies</text><text x="642" y="98" font-size="11">228 CUs</text>
+  </g>
+  <rect x="420" y="210" width="290" height="46" fill="#e8eef5" stroke="#3b6ea5" stroke-width="1.2"/>
+  <text x="565" y="238" text-anchor="middle" fill="#1f4470">128 GB HBM3, one address space</text>
+  <g stroke="#1f4470" stroke-width="2">
+    <line x1="487" y1="108" x2="487" y2="210"/><line x1="642" y1="108" x2="642" y2="210"/>
+  </g>
+  <g font-size="11" fill="#1a1a1a" text-anchor="middle">
+    <text x="565" y="154">same physical pages:</text><text x="565" y="168">no redundant copies</text>
+  </g>
+  <text x="565" y="278" text-anchor="middle" font-size="11" fill="#5a5a5a">USM pragma or -fopenmp-force-usm</text>
+
+  <text x="20" y="320" font-size="10" fill="#5a5a5a">Schematic, not measured.</text>
+</svg>

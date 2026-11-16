@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 350" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Constraint stack: base model, optional LoRA, grammar-constrained decoding, JSON Schema validator, optional repair pass">
+  <defs>
+    <marker id="arr" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5a5a5a"/>
+    </marker>
+  </defs>
+  <rect width="760" height="350" fill="#ffffff"/>
+  <text x="20" y="24" font-weight="600" fill="#1a1a1a">Each layer removes a different kind of failure</text>
+
+  <rect x="20" y="44" width="260" height="38" fill="#1f4470"/>
+  <rect x="20" y="102" width="260" height="38" fill="#ffffff" stroke="#3b6ea5" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <rect x="20" y="160" width="260" height="38" fill="#3b6ea5"/>
+  <rect x="20" y="218" width="260" height="38" fill="#3b6ea5"/>
+  <rect x="20" y="276" width="260" height="38" fill="#ffffff" stroke="#3b6ea5" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <g text-anchor="middle">
+    <text x="150" y="67" fill="#ffffff">Base instruct model</text>
+    <text x="150" y="125" fill="#1f4470">LoRA (optional)</text>
+    <text x="150" y="183" fill="#ffffff">Grammar-constrained decoding</text>
+    <text x="150" y="241" fill="#ffffff">JSON Schema validator</text>
+    <text x="150" y="299" fill="#1f4470">Repair pass (optional)</text>
+  </g>
+
+  <g stroke="#5a5a5a" stroke-width="1.5" marker-end="url(#arr)">
+    <line x1="150" y1="82" x2="150" y2="101"/><line x1="150" y1="140" x2="150" y2="159"/>
+    <line x1="150" y1="198" x2="150" y2="217"/><line x1="150" y1="256" x2="150" y2="275"/>
+  </g>
+
+  <g fill="#1a1a1a" font-size="11.5">
+    <text x="300" y="67">Reads the transcription; can emit anything, including broken JSON</text>
+    <text x="300" y="125">Only if the model keeps misreading meaning (colophon vs dating)</text>
+    <text x="300" y="183">Illegal tokens cannot be produced: JSON syntax is always valid</text>
+    <text x="300" y="241">Checks types and enums; field values can still be hallucinated</text>
+    <text x="300" y="299">Fixes records that fail validation</text>
+  </g>
+
+  <text x="20" y="338" font-size="10" fill="#5a5a5a">Schematic, not measured. Dashed boxes are optional stages.</text>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 240" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Request path: Echo to Alexa Skills to Lambda, across the tailnet to the home hook, then the Cursor agent CLI, which uses the local MCP hub and Cursor inference">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+    </marker>
+    <marker id="arrT" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e0a030"/>
+    </marker>
+  </defs>
+  <rect width="760" height="240" fill="#ffffff"/>
+
+  <!-- zones -->
+  <g fill="none" stroke="#9a9a9a" stroke-dasharray="4 3">
+    <rect x="118" y="30" width="294" height="96" rx="6"/>
+    <rect x="438" y="30" width="314" height="180" rx="6"/>
+  </g>
+  <g font-size="11" fill="#5a5a5a">
+    <text x="126" y="45">AWS: voice relay</text>
+    <text x="446" y="45">Home server: agent, tools, secrets</text>
+  </g>
+
+  <!-- nodes -->
+  <rect x="20" y="62" width="80" height="44" rx="4" fill="#ffffff" stroke="#1a1a1a"/>
+  <g fill="#3b6ea5">
+    <rect x="130" y="62" width="100" height="44" rx="4"/>
+    <rect x="260" y="62" width="140" height="44" rx="4"/>
+  </g>
+  <g fill="#1f4470">
+    <rect x="450" y="62" width="120" height="44" rx="4"/>
+    <rect x="600" y="62" width="140" height="44" rx="4"/>
+    <rect x="490" y="156" width="120" height="40" rx="4"/>
+    <rect x="630" y="156" width="110" height="40" rx="4"/>
+  </g>
+  <text x="60" y="88" text-anchor="middle" fill="#1a1a1a">Echo</text>
+  <g fill="#ffffff" text-anchor="middle">
+    <text x="180" y="88">Alexa Skills</text>
+    <text x="330" y="81">Lambda</text><text x="330" y="97" font-size="11">tailscaled + SOCKS5</text>
+    <text x="510" y="81">Home hook</text><text x="510" y="97" font-size="11">:8771 /alexa</text>
+    <text x="670" y="88">Cursor agent CLI</text>
+    <text x="550" y="180">Local MCP hub</text>
+    <text x="685" y="180">Cursor inference</text>
+  </g>
+
+  <!-- edges -->
+  <g stroke="#1a1a1a" stroke-width="1.5" fill="none" marker-end="url(#arr)">
+    <line x1="100" y1="84" x2="128" y2="84"/>
+    <line x1="230" y1="84" x2="258" y2="84"/>
+    <line x1="570" y1="84" x2="598" y2="84"/>
+    <path d="M640,106 C640,130 570,130 555,154"/>
+    <line x1="685" y1="106" x2="685" y2="154"/>
+  </g>
+  <line x1="400" y1="84" x2="448" y2="84" stroke="#e0a030" stroke-width="3" marker-end="url(#arrT)"/>
+  <text x="424" y="76" font-size="11" text-anchor="middle" fill="#a06d10">tailnet</text>
+
+  <!-- legend -->
+  <g font-size="11" fill="#1a1a1a">
+    <rect x="20" y="142" width="12" height="12" fill="#3b6ea5"/><text x="38" y="152">AWS-hosted</text>
+    <rect x="20" y="162" width="12" height="12" fill="#1f4470"/><text x="38" y="172">home server</text>
+    <rect x="20" y="185" width="12" height="4" fill="#e0a030"/><text x="38" y="190">private Tailscale hop</text>
+  </g>
+  <text x="20" y="228" font-size="10" fill="#5a5a5a">Schematic, not measured.</text>
+</svg>

@@ -4,34 +4,34 @@ date: 2024-04-01
 description: "A pragmatic guide to evaluating the network performance and deployment trade-offs of Apptainer, Spack, and Hybrid container models in high-performance computing."
 ---
 
-In enterprise software, containerization is mostly a solved problem. Docker is the default, and the overhead is usually negligible.
+In enterprise software, containers are a solved problem. Docker is the default and the overhead is usually negligible.
 
-In HPC it is a different story. Unprivileged namespaces, proprietary fabrics (InfiniBand, Cray Slingshot), and site-specific drivers mean you can tank network performance by **10x to 20x** if you containerize the wrong way.
+HPC is different. Unprivileged namespaces, proprietary fabrics (InfiniBand, Cray Slingshot), and site-specific drivers mean the wrong container setup can cut network performance by **10x to 20x**.
 
-From benchmarks on *Snellius*, this post walks through the trade-offs between container models and a decision flowchart for when (and how) to containerize.
+Based on benchmarks on *Snellius*, this post compares container models and gives a flowchart for when (and how) to containerize.
 
 ---
 
 ## The Contenders: Container Models in HPC
 
-When deploying containerized workloads via **Apptainer** (formerly Singularity), we generally choose between three models:
+With **Apptainer** (formerly Singularity), you usually pick one of these models:
 
-![Figure 1. HPC container models: Hybrid, Bind, and Fully Contained](/assets/blog/containerize/container-models.png)
+![Figure 1. HPC container models: Hybrid, Bind, and Fully Contained](/assets/blog/containerize/container-models.svg)
 
 ### 1. The Hybrid Model
-The container packages your user-space application code, but at runtime, you dynamically mount the host supercomputer's MPI and network drivers.
-*   **Pros:** Outstanding performance. Our benchmarks showed the Hybrid model matching native bare-metal speeds (peaking at **220 Gb/s** on Genoa ConnectX-7).
-*   **Cons:** Poor portability. The container is tightly coupled to the host's software stack; running it on a different cluster with a different MPI version will often result in dynamic linking errors.
+The container holds your application code. At runtime, you mount the host's MPI and network drivers.
+*   **Pros:** Excellent performance. In our benchmarks, Hybrid matched bare metal (peak **220 Gb/s** on Genoa ConnectX-7).
+*   **Cons:** Poor portability. The container depends on the host's software stack; on a cluster with a different MPI version you often get dynamic linking errors.
 
 ### 2. The Fully Contained Model
-The container is completely isolated. All dependencies, including compilers, MPI runtimes, and UCX libraries, are built from source inside the image (typically with **Spack**).
-*   **Pros:** Perfect portability and reproducibility. 
-*   **Cons:** Severe performance drops if misconfigured. Without complex network wire-up, the containerized MPI cannot talk to the host's InfiniBand drivers, defaulting to slow TCP over Ethernet (dropping bandwidth from **220 Gb/s to a mere 10 Gb/s**).
+Everything is inside the container. Compilers, MPI, and UCX are built from source in the image (usually with **Spack**).
+*   **Pros:** Full portability and reproducibility.
+*   **Cons:** Large slowdowns if misconfigured. Without careful network setup, the container's MPI cannot use the host's InfiniBand drivers and falls back to TCP over Ethernet (**220 Gb/s down to 10 Gb/s**).
 
 ---
 
 ## Spack: Composing the Fully Contained Stack
-To build a functional Fully Contained container, we utilized Spack to generate optimized binaries. Below is an example of a Spack configuration (`spack.yaml`) used to build a containerized OpenMPI stack with CUDA support, targeting an NVIDIA A100 GPU:
+We used Spack to build the Fully Contained image. Here is a `spack.yaml` for a containerized OpenMPI stack with CUDA, targeting an NVIDIA A100:
 
 ```
 spack:
@@ -51,28 +51,28 @@ spack:
   view: /opt/view
 ```
 
-Even with an optimized Spack specification, if the container runtime does not mount the host's NVIDIA device drivers (using Apptainer's `--nv` flag), the container's CUDA library will clash with the host's driver, causing runtime initialization failures.
+Even with a good Spack spec, you must mount the host's NVIDIA drivers (Apptainer's `--nv` flag). Otherwise the container's CUDA clashes with the host driver and fails at startup.
 
 ---
 
-## The Decision Flowchart: A Pragmatic Guide
-To simplify this decision-making process, I synthesized our experimental findings into a structured flowchart:
+## The Decision Flowchart
+I turned our results into a flowchart:
 
-![Figure 2. Decision flowchart for when and how to containerize HPC applications](/assets/blog/containerize/decision-flowchart.png)
+![Figure 2. Decision flowchart for when and how to containerize HPC applications](/assets/blog/containerize/decision-flowchart.svg)
 
-### Explaining the Decision Logic:
+### How to read it
 
-1.  **The Minimal Dependency Rule:** If your application is a straightforward C/Fortran code with basic library requirements, skip containerization. Running natively yields the lowest possible noise and avoids the complexities of unprivileged namespaces.
-2.  **The Single-Node Exception:** If your workload does not scale past a single node (meaning it relies on OpenMP or shared memory instead of MPI), a **Basic Contained** model is perfectly adequate. There is no InfiniBand wire-up to worry about.
-3.  **The Latency-Sensitive Check:** If your multi-node application is highly communication-bound, you must choose between **Optimized Contained** (using Spack to carefully compile UCX/InfiniBand drivers that match the host kernel) or the **Hybrid Model** (mounting the host's MPI). 
+1.  **Minimal dependencies:** For a simple C/Fortran code with basic libraries, skip containers. Native runs have the least noise and no namespace complexity.
+2.  **Single node:** If the workload stays on one node (OpenMP or shared memory, no MPI), **Basic Contained** is enough. There is no InfiniBand setup to worry about.
+3.  **Latency-sensitive:** For communication-bound multi-node codes, choose **Optimized Contained** (Spack-built UCX/InfiniBand drivers that match the host kernel) or **Hybrid** (mount the host's MPI).
 
 ---
 
-## Summary of Findings
-*   **The Hybrid Model wins on performance:** For communication-dense workloads, the Hybrid model represents the best balance between ease of installation and close-to-native performance.
-*   **The Fully Contained Model wins on portability:** However, it requires significant maintenance to ensure that UCX, Spack, and the host's driver versions align. 
+## Summary
+*   **Hybrid wins on performance:** for communication-heavy workloads it is the best balance of easy setup and near-native speed.
+*   **Fully Contained wins on portability:** but it takes ongoing work to keep UCX, Spack, and host driver versions aligned.
 
-By using this decision tree, you can skip a lot of the trial-and-error I went through on Snellius and pick a deployment model that matches how your application actually scales.
+This flowchart should save you much of the trial and error I went through on Snellius.
 
 ---
 

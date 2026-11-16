@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Race to idle: PCIe trivial staging moves the same payload in three slow steps; NVLink NCCL finishes sooner and the GPU idles, using up to 60 percent less energy">
+  <defs>
+    <pattern id="idle" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#f1f1f1"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#b5b5b5" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="760" height="330" fill="#ffffff"/>
+
+  <!-- A: PCIe trivial staging -->
+  <text x="20" y="24" font-weight="600" fill="#1a1a1a">A. PCIe trivial staging: GPU → host, CPU MPI, host → GPU</text>
+  <g stroke="#ffffff">
+    <rect x="130" y="50" width="170" height="60" fill="#e0a030"/>
+    <rect x="300" y="50" width="200" height="60" fill="#e0a030" opacity="0.75"/>
+    <rect x="500" y="50" width="170" height="60" fill="#e0a030"/>
+  </g>
+  <g fill="#1a1a1a" text-anchor="middle" font-size="11">
+    <text x="215" y="84">copy GPU → host</text><text x="400" y="84">CPU MPI over PCIe</text><text x="585" y="84">copy host → GPU</text>
+  </g>
+
+  <!-- B: NVLink NCCL -->
+  <text x="20" y="150" font-weight="600" fill="#1a1a1a">B. NVLink NCCL: same payload, direct GPU-to-GPU</text>
+  <rect x="130" y="166" width="220" height="70" fill="#3b6ea5" stroke="#ffffff"/>
+  <rect x="350" y="216" width="320" height="20" fill="url(#idle)" stroke="#b5b5b5"/>
+  <text x="240" y="205" text-anchor="middle" fill="#ffffff">transfer</text>
+  <text x="510" y="210" text-anchor="middle" font-size="11" fill="#5a5a5a">GPU back at idle power (race-to-idle)</text>
+
+  <!-- axes -->
+  <g stroke="#1a1a1a">
+    <line x1="120" y1="40" x2="120" y2="110"/><line x1="120" y1="110" x2="690" y2="110"/>
+    <line x1="120" y1="160" x2="120" y2="236"/><line x1="120" y1="236" x2="690" y2="236"/>
+  </g>
+  <g fill="#5a5a5a" font-size="11" text-anchor="end">
+    <text x="112" y="80">power</text><text x="112" y="204">power</text>
+  </g>
+  <text x="690" y="252" font-size="11" fill="#5a5a5a" text-anchor="end">time →</text>
+
+  <text x="20" y="278" fill="#1a1a1a">Energy = area under the power curve. NVLink paths (NCCL, CUDA IPC) used <tspan font-weight="600">up to 60% less</tspan> energy</text>
+  <text x="20" y="294" fill="#1a1a1a">than PCIe-bound trivial staging for the same payload.</text>
+  <text x="20" y="318" font-size="10" fill="#5a5a5a">Schematic, not measured. Bar heights and widths are illustrative; only the 60% figure is from the measurements.</text>
+</svg>

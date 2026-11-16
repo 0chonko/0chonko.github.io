@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 270" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Eight-stage extraction pipeline; the LLM is used only for entity extraction and the optional repair pass">
+  <defs>
+    <marker id="arr" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5a5a5a"/>
+    </marker>
+  </defs>
+  <rect width="760" height="270" fill="#ffffff"/>
+  <text x="20" y="24" font-weight="600" fill="#1a1a1a">The LLM appears in two stages; rules handle the rest</text>
+
+  <g fill="#e8eef5" stroke="#3b6ea5" stroke-width="1.2">
+    <rect x="20" y="50" width="150" height="44"/><rect x="205" y="50" width="150" height="44"/>
+    <rect x="390" y="50" width="150" height="44"/>
+    <rect x="20" y="140" width="150" height="44"/><rect x="205" y="140" width="150" height="44"/>
+    <rect x="390" y="140" width="150" height="44"/>
+  </g>
+  <rect x="575" y="50" width="150" height="44" fill="#3b6ea5"/>
+  <rect x="575" y="140" width="150" height="44" fill="#ffffff" stroke="#3b6ea5" stroke-width="1.5" stroke-dasharray="5 3"/>
+
+  <g fill="#1f4470" text-anchor="middle">
+    <text x="95" y="76">OCR / raw text</text><text x="280" y="76">Clean + segment</text>
+    <text x="465" y="76">Section detect</text>
+    <text x="95" y="166">Canonical object</text><text x="280" y="166">Normalize + validate</text>
+    <text x="465" y="166">Schema map</text>
+    <text x="650" y="160">Repair (optional)</text>
+  </g>
+  <text x="650" y="70" fill="#ffffff" text-anchor="middle">Entity extract</text>
+  <g font-size="10" font-weight="600" text-anchor="middle">
+    <text x="650" y="85" fill="#ffffff">LLM</text><text x="650" y="175" fill="#3b6ea5">LLM</text>
+  </g>
+
+  <g stroke="#5a5a5a" stroke-width="1.5" fill="none" marker-end="url(#arr)">
+    <line x1="170" y1="72" x2="204" y2="72"/><line x1="355" y1="72" x2="389" y2="72"/>
+    <line x1="540" y1="72" x2="574" y2="72"/>
+    <path d="M650,94 V117 H95 V139"/>
+    <line x1="170" y1="162" x2="204" y2="162"/><line x1="355" y1="162" x2="389" y2="162"/>
+    <line x1="540" y1="162" x2="574" y2="162"/>
+  </g>
+
+  <g font-size="11" fill="#1a1a1a">
+    <rect x="20" y="210" width="12" height="12" fill="#e8eef5" stroke="#3b6ea5"/><text x="38" y="220">rules: regex, layout heuristics, lookup tables (Bl., mm, Bastarda, years)</text>
+    <rect x="480" y="210" width="12" height="12" fill="#3b6ea5"/><text x="498" y="220">LLM stage</text>
+    <rect x="570" y="210" width="12" height="12" fill="#ffffff" stroke="#3b6ea5" stroke-dasharray="3 2"/><text x="588" y="220">optional</text>
+  </g>
+  <text x="20" y="252" font-size="10" fill="#5a5a5a">Schematic, not measured.</text>
+</svg>

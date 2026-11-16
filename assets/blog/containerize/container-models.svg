@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Three HPC container models as software stacks: Hybrid uses host MPI and network stack, Bind mounts host directories, Fully Contained builds everything with Spack">
+  <defs>
+    <marker id="arrT" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e0a030"/>
+    </marker>
+  </defs>
+  <rect width="760" height="330" fill="#ffffff"/>
+
+  <g font-weight="600" fill="#1a1a1a">
+    <text x="20" y="28">Hybrid</text><text x="270" y="28">Bind</text><text x="520" y="28">Fully Contained</text>
+  </g>
+  <g font-size="11" fill="#5a5a5a">
+    <text x="20" y="44">container + host MPI/network stack</text>
+    <text x="270" y="44">container + mounted host directories</text>
+    <text x="520" y="44">everything inside, built with Spack</text>
+  </g>
+
+  <!-- layers: y = 70 app, 108 MPI, 146 UCX/fabric, 184 host kernel + IB -->
+  <g stroke="#ffffff">
+    <rect x="20" y="70" width="220" height="34" fill="#3b6ea5"/>
+    <rect x="20" y="108" width="220" height="34" fill="#1f4470"/>
+    <rect x="20" y="146" width="220" height="34" fill="#1f4470"/>
+    <rect x="20" y="184" width="220" height="34" fill="#1f4470"/>
+
+    <rect x="270" y="70" width="220" height="34" fill="#3b6ea5"/>
+    <rect x="270" y="108" width="220" height="34" fill="#3b6ea5"/>
+    <rect x="270" y="146" width="220" height="34" fill="#3b6ea5"/>
+    <rect x="270" y="184" width="220" height="34" fill="#1f4470"/>
+
+    <rect x="520" y="70" width="220" height="34" fill="#3b6ea5"/>
+    <rect x="520" y="108" width="220" height="34" fill="#3b6ea5"/>
+    <rect x="520" y="146" width="220" height="34" fill="#3b6ea5"/>
+    <rect x="520" y="184" width="220" height="34" fill="#1f4470"/>
+  </g>
+  <g fill="#ffffff" text-anchor="middle">
+    <text x="130" y="91">application code</text><text x="130" y="129">host MPI (mounted)</text>
+    <text x="130" y="167">host UCX / network drivers</text><text x="130" y="205">host kernel + InfiniBand</text>
+    <text x="380" y="91">application code</text><text x="380" y="129">MPI runtime</text>
+    <text x="380" y="167">UCX / fabric libraries</text><text x="380" y="205">host kernel + InfiniBand</text>
+    <text x="630" y="91">application code</text><text x="630" y="129">MPI runtime (Spack)</text>
+    <text x="630" y="167">UCX, compilers (Spack)</text><text x="630" y="205">host kernel + InfiniBand</text>
+  </g>
+
+  <!-- container boundaries -->
+  <g fill="none" stroke="#1a1a1a" stroke-width="1.5" stroke-dasharray="5 3">
+    <rect x="16" y="66" width="228" height="42"/>
+    <rect x="266" y="66" width="228" height="118"/>
+    <rect x="516" y="66" width="228" height="118"/>
+  </g>
+
+  <!-- bind mount -->
+  <rect x="270" y="236" width="220" height="26" fill="#ffffff" stroke="#1f4470"/>
+  <text x="380" y="253" text-anchor="middle" fill="#1f4470">host directories</text>
+  <path d="M494,249 h14 v-170 h-12" fill="none" stroke="#e0a030" stroke-width="2.5" marker-end="url(#arrT)"/>
+  <text x="380" y="278" font-size="11" text-anchor="middle" fill="#a06d10">bind-mounted into the container</text>
+
+  <!-- results from the post -->
+  <text x="20" y="244" font-size="11" fill="#1a1a1a">≈ native: peak 220 Gb/s</text>
+  <text x="20" y="258" font-size="11" fill="#1a1a1a">(Genoa, ConnectX-7)</text>
+  <text x="20" y="274" font-size="11" fill="#c0392b">breaks on other MPI versions</text>
+  <text x="520" y="244" font-size="11" fill="#1a1a1a">fully portable and reproducible</text>
+  <text x="520" y="260" font-size="11" fill="#c0392b">misconfigured: falls back to TCP,</text>
+  <text x="520" y="274" font-size="11" fill="#c0392b">220 → 10 Gb/s</text>
+
+  <!-- legend -->
+  <g font-size="11" fill="#1a1a1a">
+    <rect x="20" y="294" width="12" height="12" fill="#3b6ea5"/><text x="38" y="304">from the container image</text>
+    <rect x="190" y="294" width="12" height="12" fill="#1f4470"/><text x="208" y="304">from the host</text>
+    <rect x="300" y="294" width="16" height="12" fill="none" stroke="#1a1a1a" stroke-dasharray="4 2"/><text x="322" y="304">container boundary</text>
+  </g>
+  <text x="20" y="322" font-size="10" fill="#5a5a5a">Schematic; bandwidths are the Snellius benchmark values quoted in the text.</text>
+</svg>

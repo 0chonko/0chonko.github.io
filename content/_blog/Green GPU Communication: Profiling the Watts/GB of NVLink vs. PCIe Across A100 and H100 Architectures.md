@@ -4,68 +4,64 @@ date: 2024-09-15
 description: "A deep dive into the energy footprint of GPU interconnects, exploring the thermodynamic cost of inter-device transfers."
 ---
 
-As large language models scale to hundreds of billions of parameters, training clusters get big enough that communication stops being a latency problem alone. It shows up on the power bill too.
+As language models grow to hundreds of billions of parameters, training clusters get so large that communication is no longer only a latency problem. It shows up on the power bill too.
 
-I used the async power profiler from my earlier GPU work on *Snellius* to measure Watts and memory utilization across **NVIDIA A100 (Ampere)** and **H100 (Hopper)** nodes, comparing **NVLink**, **PCIe**, **CUDA-Aware MPI**, and **NCCL**.
+I used the async power profiler from my earlier GPU work on *Snellius* to measure power and memory use on **NVIDIA A100 (Ampere)** and **H100 (Hopper)** nodes, comparing **NVLink**, **PCIe**, **CUDA-Aware MPI**, and **NCCL**.
 
 ---
 
 ## The Testing Topology
-We analyzed two modern GPU node configurations:
-*   **NVIDIA A100 SXM4 Node:** Equipped with 4x A100 GPUs (40GB HBM2). Inter-device communication is facilitated by **NVLink Gen3** (4 links per GPU, providing a theoretical 100 GB/s bidirectional bandwidth).
-*   **NVIDIA H100 Node:** Equipped with 4x H100 GPUs (94GB HBM3). Inter-device links run on **NVLink Gen4** (providing up to 160 GB/s per device for peer-to-peer transfers).
+Two node types:
+*   **A100 SXM4 node:** 4x A100 (40GB HBM2), linked by **NVLink Gen3** (4 links per GPU, theoretical 100 GB/s bidirectional).
+*   **H100 node:** 4x H100 (94GB HBM3), linked by **NVLink Gen4** (up to 160 GB/s per device for peer-to-peer).
 
-We tested four primary software pathways to move data:
-1.  **Trivial Staging:** Manual copy from GPU to Host CPU, transferred via CPU MPI, then copied back down to the target GPU.
-2.  **CUDA-Aware MPI:** Passing GPU device pointers directly to MPI, allowing the runtime to coordinate direct transfers via UCX.
-3.  **NCCL (NVIDIA Collective Communications Library):** NVIDIA's highly proprietary collective library.
-4.  **CUDA IPC:** Direct memory access between GPUs on the same node via NVLink.
-
----
-
-## Finding 1: The NVLink Energy Efficiency Dividend
-One of the most immediate takeaways from our energy measurements was the confirmation of the NVLink energy efficiency dividend. 
-
-Because **NVLink** gives higher bandwidth and lower latency than **PCIe**, it finishes transfers faster. The GPU gets back to a lower idle power state sooner, what architects call **"race-to-idle."**
-
-Our profiling showed that NVLink paths via **NCCL** or **CUDA IPC** can cut total energy by **up to 60%** versus PCIe-bound options like Trivial Staging, for the same payload sizes.
-
-![Figure 1. PCIe trivial staging uses more energy than NVLink NCCL for the same payload](/assets/blog/green-gpu-comms/energy-nvlink-vs-pcie.png)
----
-
-## Finding 2: Power Footprint of Communication Patterns
-We profiled three distinct communication patterns: **Peer-To-Peer (PP)**, **All-To-All (A2A)**, and **All-Reduce (AR)** across varying payload sizes (up to 0.5 GB).
-
-### 1. Peer-To-Peer (PP) Power Profile
-For simple P2P transfers, NCCL and CUDA IPC demonstrated the lowest power draw. Interestingly, the lowest power draw of all was achieved by **CUDA IPC**, as it bypasses the CPU and MPI runtimes entirely, executing direct `cudaMemcpyPeer` operations over NVLink.
-
-### 2. The Collective Burden: All-To-All & All-Reduce
-As the communication patterns became more complex, the differences in power draw grew pronounced. 
-
-![Figure 2. A100 All-Reduce peak power for NCCL, CUDA-Aware MPI, and CUDA IPC](/assets/blog/green-gpu-comms/allreduce-peak-power.png)
-
-During an `All-Reduce` operation on the A100, **NCCL** draw peaked at **142.95W**. In contrast, **CUDA IPC** peaked at **195W**. While CUDA IPC draws more instantaneous power, its memory allocation and link utilization are highly intensive, meaning it finishes the transfer much faster, resulting in lower net energy usage (Joules) over time.
+Four ways to move data:
+1.  **Trivial Staging:** copy GPU → host, send with CPU MPI, copy host → target GPU.
+2.  **CUDA-Aware MPI:** pass GPU pointers straight to MPI; the runtime moves data directly via UCX.
+3.  **NCCL:** NVIDIA's proprietary collective library.
+4.  **CUDA IPC:** direct memory access between GPUs on the same node over NVLink.
 
 ---
 
-## Finding 3: Memory Component and SM Utilization
-Using DCGM hardware counters, we tracked **Streaming Multiprocessor (SM) Activity** (`DCGM_FI_PROF_SM_ACTIVE`) and **SM Occupancy** during these transfers. 
+## Finding 1: NVLink Saves Energy
+**NVLink** has higher bandwidth and lower latency than **PCIe**, so transfers finish sooner. The GPU drops back to idle power earlier. Architects call this **"race-to-idle."**
 
-An interesting architectural division emerged:
-*   **NCCL's Collective Domination:** For `All-Reduce`, NCCL peaked at approximately 16% SM activation, indicating highly structured, topology-aware algorithms that keep the SMs active just enough to orchestrate the transfers without wasting compute cycles.
-*   **CUDA-Aware MPI PCIe Fallback:** During complex collectives, CUDA-Aware MPI fell back to PCIe instead of NVLink when queues congested. SM activity dropped toward 0% while the GPU waited on slow PCIe traffic. Same pattern I saw in the UCX bandwidth work, just read through a power meter this time.
+NVLink paths via **NCCL** or **CUDA IPC** used **up to 60%** less total energy than PCIe-bound Trivial Staging for the same payloads.
+
+![Figure 1. PCIe trivial staging uses more energy than NVLink NCCL for the same payload](/assets/blog/green-gpu-comms/energy-nvlink-vs-pcie.svg)
+---
+
+## Finding 2: Power by Communication Pattern
+We profiled **Peer-To-Peer (PP)**, **All-To-All (A2A)**, and **All-Reduce (AR)** for payloads up to 0.5 GB.
+
+### 1. Peer-To-Peer
+NCCL and CUDA IPC drew the least power. **CUDA IPC** was lowest: it skips the CPU and MPI entirely and runs `cudaMemcpyPeer` directly over NVLink.
+
+### 2. Collectives: All-To-All and All-Reduce
+With more complex patterns, the power gaps grew.
+
+![Figure 2. A100 All-Reduce peak power for NCCL, CUDA-Aware MPI, and CUDA IPC](/assets/blog/green-gpu-comms/allreduce-peak-power.svg)
+
+In an A100 `All-Reduce`, **NCCL** peaked at **142.95W** and **CUDA IPC** at **195W**. CUDA IPC draws more at peak because it uses memory and links hard, but it finishes much sooner, so it uses fewer joules overall.
 
 ---
 
-## A100 vs. H100: Generational Energy Metrics
-Comparing the two nodes, the **H100** demonstrated significantly greater power and runtime stability. 
+## Finding 3: Memory and SM Utilization
+With DCGM counters we tracked **SM Activity** (`DCGM_FI_PROF_SM_ACTIVE`) and **SM Occupancy** during transfers. Two patterns stood out:
+*   **NCCL:** in `All-Reduce`, SM activity peaked around 16%. Its topology-aware algorithms keep SMs busy just enough to drive the transfer, without wasting compute.
+*   **CUDA-Aware MPI falls back to PCIe:** in complex collectives, it switched from NVLink to PCIe when queues congested. SM activity dropped toward 0% while the GPU waited on PCIe. I saw the same pattern in the UCX bandwidth work, this time through a power meter.
 
-While the A100 showed variable power drops under containerized environments, the H100 kept its performance and power metrics tightly aligned between native and containerized runs. This suggests that the Hopper architecture's onboard memory controllers and advanced NVSwitch fabrics are much more resilient to virtualization overhead.
+---
 
-## Key Performance Engineering Takeaways
-1.  **Optimize for Race-To-Idle:** If you are trying to cut energy costs in large GPU clusters, prioritize peak throughput via **NCCL** or **CUDA IPC** to allow the GPUs to return to idle states quickly.
-2.  **Monitor Your Interconnects:** Use DCGM counters (`DCGM_FI_PROF_PCIE_TX_BYTES` vs. `DCGM_FI_PROF_NVLINK_TX_BYTES`) to verify that your MPI runtime is not silently routing collective traffic over the slow PCIe bus during congestion.
-3.  **Choose Hardware Consistently:** If cost estimation and budget predictability are paramount, the **H100** provides a much more stable and predictable power-to-performance profile under virtualized containers than the A100.
+## A100 vs. H100
+The **H100** was much more stable in power and runtime.
+
+The A100 showed variable power drops in containers. The H100 kept power and performance closely matched between native and containerized runs. This suggests Hopper's memory controllers and NVSwitch fabric handle virtualization overhead much better.
+
+## Takeaways
+1.  **Race to idle:** to cut energy in large GPU clusters, maximize throughput with **NCCL** or **CUDA IPC** so GPUs return to idle quickly.
+2.  **Watch your interconnects:** compare DCGM counters (`DCGM_FI_PROF_PCIE_TX_BYTES` vs. `DCGM_FI_PROF_NVLINK_TX_BYTES`) to check that MPI is not quietly sending collectives over PCIe under congestion.
+3.  **Pick hardware for predictability:** if budget predictability matters, the **H100** gives a much steadier power-to-performance profile in containers than the A100.
 
 ---
 
