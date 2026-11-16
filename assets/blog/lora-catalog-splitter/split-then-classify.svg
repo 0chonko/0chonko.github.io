@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 530" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="A glued catalog string is split into three exact spans; a non-autoregressive encoder scores N labels per span in one batched pass, and a tunable threshold decides between accepting the top label and sending the span to review">
+  <defs>
+    <marker id="arr" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5a5a5a"/>
+    </marker>
+  </defs>
+  <rect width="760" height="530" fill="#ffffff"/>
+  <text x="20" y="24" font-weight="600" fill="#1a1a1a">Split once (serial), then score N labels per span (parallel)</text>
+
+  <g font-size="11" fill="#5a5a5a">
+    <text x="20" y="50">input: one catalog field, references glued together</text>
+    <text x="20" y="214">expected output: exact substrings, one per line</text>
+    <text x="550" y="214">p(label | span), N = 4 labels</text>
+  </g>
+
+  <rect x="20" y="58" width="440" height="64" fill="#f5f5f5" stroke="#b5b5b5"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#1a1a1a">
+    <text x="32" y="80">Bruck, Malereien in Handschriften Sachsens, Dresden 1906, S.</text>
+    <text x="32" y="96">112; Schmidt, in: ZfdA 52 (1910), 301-305; Katalog der</text>
+    <text x="32" y="112">Handschriften, Bd. 2, Leipzig 1905, Nr. 41</text>
+  </g>
+
+  <rect x="120" y="140" width="240" height="40" fill="#3b6ea5"/>
+  <text x="240" y="157" fill="#ffffff" text-anchor="middle">LoRA splitter (700M, autoregressive)</text>
+  <text x="240" y="172" fill="#ffffff" font-size="10" text-anchor="middle">copies boundaries, never rewrites</text>
+
+  <g fill="#e8eef5" stroke="#3b6ea5" stroke-width="1.2">
+    <rect x="20" y="246" width="440" height="28"/>
+    <rect x="20" y="330" width="440" height="28"/>
+    <rect x="20" y="414" width="440" height="28"/>
+  </g>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#1f4470">
+    <text x="32" y="264">Bruck, Malereien in Handschriften Sachsens, Dresden 1906, S. 112</text>
+    <text x="32" y="348">Schmidt, in: ZfdA 52 (1910), 301-305</text>
+    <text x="32" y="432">Katalog der Handschriften, Bd. 2, Leipzig 1905, Nr. 41</text>
+  </g>
+  <g font-size="10.5" font-weight="600">
+    <text x="32" y="290" fill="#3b6ea5">accept: monograph (0.81 ≥ τ), new row</text>
+    <text x="32" y="374" fill="#3b6ea5">accept: journal article (0.90 ≥ τ), new row</text>
+    <text x="32" y="458" fill="#b5651d">top label 0.46 &lt; τ: send to human review</text>
+  </g>
+
+  <rect x="480" y="226" width="56" height="236" fill="#ffffff" stroke="#3b6ea5" stroke-width="1.5"/>
+  <g fill="#1f4470" text-anchor="middle">
+    <text transform="translate(504 344) rotate(-90)">non-autoregressive encoder</text>
+    <text transform="translate(522 344) rotate(-90)" font-size="10" font-weight="600" fill="#3b6ea5">one batched forward pass</text>
+  </g>
+
+  <g font-size="10" fill="#1a1a1a" text-anchor="end">
+    <text x="630" y="238">monograph</text><text x="630" y="255">article</text><text x="630" y="272">catalog</text><text x="630" y="289">other</text>
+    <text x="630" y="322">monograph</text><text x="630" y="339">article</text><text x="630" y="356">catalog</text><text x="630" y="373">other</text>
+    <text x="630" y="406">monograph</text><text x="630" y="423">article</text><text x="630" y="440">catalog</text><text x="630" y="457">other</text>
+  </g>
+  <g fill="#f0f0f0">
+    <rect x="636" y="228" width="78" height="13"/><rect x="636" y="245" width="78" height="13"/><rect x="636" y="262" width="78" height="13"/><rect x="636" y="279" width="78" height="13"/>
+    <rect x="636" y="312" width="78" height="13"/><rect x="636" y="329" width="78" height="13"/><rect x="636" y="346" width="78" height="13"/><rect x="636" y="363" width="78" height="13"/>
+    <rect x="636" y="396" width="78" height="13"/><rect x="636" y="413" width="78" height="13"/><rect x="636" y="430" width="78" height="13"/><rect x="636" y="447" width="78" height="13"/>
+  </g>
+  <g fill="#c9d6e6">
+    <rect x="636" y="245" width="5.5" height="13"/><rect x="636" y="262" width="7.0" height="13"/><rect x="636" y="279" width="2.3" height="13"/>
+    <rect x="636" y="312" width="3.9" height="13"/><rect x="636" y="346" width="1.6" height="13"/><rect x="636" y="363" width="2.3" height="13"/>
+    <rect x="636" y="396" width="29.6" height="13"/><rect x="636" y="413" width="3.1" height="13"/><rect x="636" y="447" width="9.4" height="13"/>
+  </g>
+  <rect x="636" y="228" width="63.2" height="13" fill="#3b6ea5"/>
+  <rect x="636" y="329" width="70.2" height="13" fill="#3b6ea5"/>
+  <rect x="636" y="430" width="35.9" height="13" fill="#b5651d"/>
+  <g font-size="10" fill="#5a5a5a" text-anchor="end">
+    <text x="744" y="238">0.81</text><text x="744" y="255">0.07</text><text x="744" y="272">0.09</text><text x="744" y="289">0.03</text>
+    <text x="744" y="322">0.05</text><text x="744" y="339">0.90</text><text x="744" y="356">0.02</text><text x="744" y="373">0.03</text>
+    <text x="744" y="406">0.38</text><text x="744" y="423">0.04</text><text x="744" y="440">0.46</text><text x="744" y="457">0.12</text>
+  </g>
+
+  <g stroke="#1a1a1a" stroke-width="1.2" stroke-dasharray="3 2">
+    <line x1="682.8" y1="224" x2="682.8" y2="296"/>
+    <line x1="682.8" y1="308" x2="682.8" y2="380"/>
+    <line x1="682.8" y1="392" x2="682.8" y2="464"/>
+  </g>
+  <text x="682.8" y="478" font-size="10" fill="#1a1a1a" text-anchor="middle">τ = 0.6 (tunable)</text>
+
+  <g stroke="#5a5a5a" stroke-width="1.5" fill="none" marker-end="url(#arr)">
+    <line x1="240" y1="122" x2="240" y2="139"/>
+    <line x1="240" y1="180" x2="240" y2="199"/>
+    <line x1="460" y1="260" x2="479" y2="260"/>
+    <line x1="460" y1="344" x2="479" y2="344"/>
+    <line x1="460" y1="428" x2="479" y2="428"/>
+    <line x1="536" y1="260" x2="549" y2="260"/>
+    <line x1="536" y1="344" x2="549" y2="344"/>
+    <line x1="536" y1="428" x2="549" y2="428"/>
+  </g>
+
+  <text x="20" y="500" font-size="11" fill="#1a1a1a">Softmax over N labels per span, all spans in the same batch. Raising τ trades automation for precision: more spans go to review.</text>
+  <text x="20" y="520" font-size="10" fill="#5a5a5a">Illustrative example, not from the eval set. Schematic, not measured.</text>
+</svg>

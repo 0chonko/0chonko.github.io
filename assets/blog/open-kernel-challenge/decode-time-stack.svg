@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Conceptual decode-step time stack: dense projections, attention, and routed experts">
+  <rect width="760" height="260" fill="#ffffff"/>
+  <text x="20" y="28" font-weight="600" fill="#1a1a1a">Decode step (one GPU shard): where SGLang's baseline time goes</text>
+  <text x="20" y="48" fill="#5a5a5a">Widths are schematic from the published Muse Spark layer breakdown, not my runs.</text>
+
+  <!-- stacked bar -->
+  <g stroke="#ffffff" stroke-width="2">
+    <rect x="40" y="90" width="120" height="56" fill="#3b6ea5"/>
+    <rect x="160" y="90" width="100" height="56" fill="#e0a030"/>
+    <rect x="260" y="90" width="420" height="56" fill="#c0392b"/>
+  </g>
+  <g fill="#ffffff" text-anchor="middle" font-weight="600">
+    <text x="100" y="124">dense proj</text>
+    <text x="210" y="124">attn</text>
+    <text x="470" y="124">routed experts (~half+)</text>
+  </g>
+
+  <g fill="#5a5a5a" font-size="11">
+    <text x="100" y="168" text-anchor="middle">muse_bf16_proj</text>
+    <text x="210" y="168" text-anchor="middle">muse_attention_decode</text>
+    <text x="470" y="168" text-anchor="middle">muse_moe_w4a16 (+ layer boards)</text>
+  </g>
+
+  <text x="40" y="210" fill="#1a1a1a">Five kernel problems cut this stack; full decode/prefill boards assemble the pieces.</text>
+  <text x="40" y="232" fill="#5a5a5a">Public writeups showed the largest baseline gaps on MoE-related boards: that path is still moving fast.</text>
+</svg>

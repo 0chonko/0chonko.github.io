@@ -6,7 +6,7 @@ description: "Initial notes on a series about porting unstructured university li
 
 This post starts a series on porting a large body of unstructured university library data into a new metadata editing backend. It is not a one-shot ETL script: legacy catalog records must go through the new system's API, so every payload has to be extracted and validated first. Hosted APIs are off the table, so batch inference, fine-tuning, and evaluation will run on the local university HPC cluster.
 
-The first hard problem is manuscript transcriptions from the **7th century onward**: noisy historical text with Latin nomenclature, abbreviations, and transcription styles that shift across centuries and catalogers. All of it has to become valid JSON against a fixed schema. Here is my initial plan, plus a few early experiments that already changed direction. Later posts will cover implementation, API integration, and what worked at scale.
+The first hard problem is manuscript transcriptions from the **7th century onward**: noisy historical text with Latin nomenclature, abbreviations, and transcription styles that shift across centuries and catalogers. All of it has to become valid JSON against a fixed schema. Here is my initial plan, plus a few early experiments that already changed direction. Later posts cover the pieces that broke that plan in interesting ways, including [LoRA on a catalog-splitting sub-problem](/blog/Teaching-a-700M-Model-to-Cut-Catalogs-LoRA-on-an-8GB-GPU/) when exact substring lists beat prompting.
 
 ---
 
@@ -159,7 +159,7 @@ No hosted API means a strong open-weight instruct model, batch evaluation and fi
 2. **Baseline** with a careful prompt and enriched schema descriptions. Measure schema validity and field F1.
 3. **Grammar-constrained decoding** against the JSON Schema. Expect a big validity jump.
 4. **Chunked extraction** for the nested 50+ field schema before scaling model size.
-5. **LoRA fine-tuning** only if semantic errors dominate after steps 2 to 4.
+5. **LoRA fine-tuning** only if semantic errors dominate after steps 2 to 4. For one narrow field (glued literature references → one row per citation), that condition already held; see the [catalog splitter ablations](/blog/Teaching-a-700M-Model-to-Cut-Catalogs-LoRA-on-an-8GB-GPU/).
 6. **DSPy or structured prompt search** against the validation metric.
 7. **CMR + mapper** before hard-coding domain field names into prompts.
 8. **Weak labels** via Snorkel-style rules for high-precision patterns.
