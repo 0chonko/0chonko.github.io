@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="A 64-bit address split into tag, set index and offset; the index selects one of 128 sets, the tag is compared against all 8 ways, LRU ages pick the victim on a miss">
+  <defs>
+    <marker id="arr" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <rect width="760" height="320" fill="#ffffff"/>
+  <text x="20" y="24" font-weight="600" fill="#1a1a1a">Decoding an address in the 32 kB, 8-way, 32-byte-line L1</text>
+
+  <rect x="40" y="44" width="440" height="32" fill="#1f4470"/>
+  <rect x="480" y="44" width="140" height="32" fill="#e0a030"/>
+  <rect x="620" y="44" width="100" height="32" fill="#3b6ea5"/>
+  <g fill="#ffffff" text-anchor="middle">
+    <text x="260" y="64">tag  [63:12]</text>
+    <text x="550" y="64" fill="#1a1a1a">set index  [11:5]</text>
+    <text x="670" y="64">offset  [4:0]</text>
+  </g>
+  <g fill="#555" text-anchor="middle" font-size="11">
+    <text x="260" y="92">compared against all 8 ways</text>
+    <text x="550" y="92">7 bits: 1 of 128 sets</text>
+    <text x="670" y="92">5 bits: byte in line</text>
+  </g>
+
+  <g fill="#555" text-anchor="end">
+    <text x="92" y="131">set 0</text><text x="92" y="157">set 1</text>
+    <text x="92" y="207" fill="#1a1a1a" font-weight="600">set 37</text>
+    <text x="92" y="257">set 127</text>
+  </g>
+  <g fill="#f2f2f2" stroke="#b5b5b5">
+    <rect x="100" y="116" width="60" height="22"/><rect x="166" y="116" width="60" height="22"/><rect x="232" y="116" width="60" height="22"/><rect x="298" y="116" width="60" height="22"/>
+    <rect x="364" y="116" width="60" height="22"/><rect x="430" y="116" width="60" height="22"/><rect x="496" y="116" width="60" height="22"/><rect x="562" y="116" width="60" height="22"/>
+    <rect x="100" y="142" width="60" height="22"/><rect x="166" y="142" width="60" height="22"/><rect x="232" y="142" width="60" height="22"/><rect x="298" y="142" width="60" height="22"/>
+    <rect x="364" y="142" width="60" height="22"/><rect x="430" y="142" width="60" height="22"/><rect x="496" y="142" width="60" height="22"/><rect x="562" y="142" width="60" height="22"/>
+    <rect x="100" y="242" width="60" height="22"/><rect x="166" y="242" width="60" height="22"/><rect x="232" y="242" width="60" height="22"/><rect x="298" y="242" width="60" height="22"/>
+    <rect x="364" y="242" width="60" height="22"/><rect x="430" y="242" width="60" height="22"/><rect x="496" y="242" width="60" height="22"/><rect x="562" y="242" width="60" height="22"/>
+  </g>
+  <g fill="#555" text-anchor="middle"><text x="361" y="182">⋮</text><text x="361" y="232">⋮</text></g>
+
+  <g fill="#ffffff" stroke="#1f4470" stroke-width="1.5">
+    <rect x="100" y="192" width="60" height="22"/><rect x="166" y="192" width="60" height="22"/>
+    <rect x="298" y="192" width="60" height="22"/><rect x="364" y="192" width="60" height="22"/>
+    <rect x="430" y="192" width="60" height="22"/><rect x="496" y="192" width="60" height="22"/><rect x="562" y="192" width="60" height="22"/>
+  </g>
+  <rect x="232" y="192" width="60" height="22" fill="#ffffff" stroke="#c0392b" stroke-width="2.5"/>
+  <rect x="364" y="192" width="60" height="22" fill="#2e8b57"/>
+  <g text-anchor="middle" fill="#1a1a1a">
+    <text x="130" y="207">age 4</text><text x="196" y="207">age 7</text><text x="262" y="207" fill="#c0392b">age 1</text>
+    <text x="328" y="207">age 5</text><text x="394" y="207" fill="#ffffff">age 6</text><text x="460" y="207">age 8</text>
+    <text x="526" y="207">age 2</text><text x="592" y="207">age 3</text>
+  </g>
+  <g fill="#555" text-anchor="middle" font-size="11">
+    <text x="130" y="110">way 0</text><text x="196" y="110">way 1</text><text x="262" y="110">way 2</text><text x="328" y="110">way 3</text>
+    <text x="394" y="110">way 4</text><text x="460" y="110">way 5</text><text x="526" y="110">way 6</text><text x="592" y="110">way 7</text>
+  </g>
+  <path d="M550,98 L550,150 L700,150 L700,203 L628,203" fill="none" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="100" y="282" width="14" height="14" fill="#2e8b57"/>
+  <text x="120" y="294" fill="#1a1a1a">tag match: hit, line becomes age 8, others shift down</text>
+  <rect x="440" y="282" width="14" height="14" fill="#ffffff" stroke="#c0392b" stroke-width="2.5"/>
+  <text x="460" y="294" fill="#1a1a1a">no match: evict age 1 (write back if dirty)</text>
+</svg>

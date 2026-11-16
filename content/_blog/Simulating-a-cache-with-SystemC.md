@@ -34,7 +34,11 @@ struct CacheSet {
 For the baseline **32 kB cache** with **32-byte lines** and **8-way associativity**:
 *   1024 cache lines in total.
 *   8 ways give 128 sets.
-*   Addresses are decoded at runtime: the 5 lowest bits are the word offset, the next 7 the set index, the rest the tag. Because it is parameterized, 64-byte lines or other capacities are easy.
+*   Addresses are decoded at runtime: the 5 lowest bits are the byte offset, the next 7 the set index, the rest the tag. Because it is parameterized, 64-byte lines or other capacities are easy.
+
+![Address decoding: the index picks one set, the tag is compared against its 8 ways, LRU ages pick the victim](/assets/blog/simulating-a-cache-with/address-decoding.svg)
+
+The index decides *where* a line may live, and the tag decides *which* line it is. Two addresses that share index bits compete for the same 8 slots even if the rest of the cache is empty, which is where conflict misses come from.
 
 ### Policies: Write-Back, Write-Allocate, LRU
 To save off-chip bandwidth I used **write-back** with **write-on-allocate**:
@@ -79,8 +83,6 @@ Three interfaces:
 ### V-I Results
 Average bus access latency (time from entering the queue to execution) stayed flat at around 100 simulation units across core counts, except for the 50×50 and 8×5000 workloads.
 
-![Average Bus Access Times](/assets/blog/simulating-a-cache-with/bus-architecture-2.png)
-
 Write-through has a hard limit, though: every write goes to main memory, so the shared bus quickly becomes the bottleneck under realistic multicore load.
 
 ---
@@ -93,6 +95,16 @@ To remove the write-through bottleneck and cut DRAM bandwidth, I moved to **MOES
 With MOESI, caches can share dirty data without writing it back first:
 *   **Owned (O) & Modified (M):** dirty data. If another core reads a `Modified` line, the owner moves it to `Owned` and sends the data directly to the requester (which stores it as `Shared`), skipping a slow DRAM read.
 *   **Exclusive (E):** clean data held by one cache only, so a local write can move it to `Modified` without a bus invalidation.
+
+![V-I versus MOESI state machines for one cache line](/assets/blog/simulating-a-cache-with/vi-vs-moesi.svg)
+
+The way I ended up reading the five states is as answers to three questions a cache asks about a line before it acts:
+
+*   **Is memory stale?** `M` and `O` say yes, so someone has to write the line back on eviction. `E` and `S` say memory is fine (as far as this cache is concerned).
+*   **Am I the only copy?** `M` and `E` say yes, so a local write needs no bus traffic at all. That is the `E → M` edge, and it is the cheapest write in the protocol.
+*   **Who answers a remote read?** The `O` owner does, cache-to-cache, instead of forcing a write-back to DRAM followed by a DRAM read.
+
+V-I is what you get when you refuse to answer any of these. Memory is never stale because every write goes through, nobody is ever the only copy, and nobody supplies data. That's simple, but it puts every store on the bus. MOESI keeps more state per line so that most writes and many reads never leave the core.
 
 The bus request interface now carries state information:
 ```cpp
@@ -107,14 +119,8 @@ MOESI improved the metrics across the benchmarks.
 #### Hit rates and scaling
 With V-I, adding cores sharply lowered hit rates because of aggressive invalidation. MOESI kept hit rates high and stable (consistently above 80%) because cores could share read-only data in the `Shared` and `Owned` states.
 
-| V-I Hit Rates | MOESI Hit Rates |
-| :---: | :---: |
-| ![](/assets/blog/simulating-a-cache-with/vi-hitrates.png) | ![](/assets/blog/simulating-a-cache-with/moesi-hitrates.png) |
-
 #### Memory traffic
-The main win is far fewer main-memory accesses. Since caches serve each other directly, DRAM reads dropped sharply (yellow below), while write-backs stayed under control.
-
-![Memory Access Comparison](/assets/blog/simulating-a-cache-with/memory-accesses-moesi-vi.png)
+The main win is far fewer main-memory accesses. Since caches serve each other directly, DRAM reads dropped sharply, while write-backs stayed under control.
 
 #### Bus contention
 You might expect the more complex MOESI state machine to add bus contention. Instead, average bus acquisition time improved slightly: with far fewer slow DRAM accesses, the bus spent less time stalled on memory and the queues moved faster.
@@ -129,7 +135,9 @@ Each grid cell is updated from its neighbors:
 
 NewVal = f(Left, Right, Up, Down)
 
-![Heat Diffusion Grid Update Pattern](/assets/blog/simulating-a-cache-with/heat-diffusion.png)
+![Row sweep, tiled traversal, and OpenMP chunks relative to cache lines](/assets/blog/simulating-a-cache-with/heat-access-patterns.svg)
+
+The variants below differ only in the order cells are visited and in which thread owns which cells. The arithmetic is identical. What changes is how long a line stays useful in L1 (left and middle) and whether two cores ever write the same line (right).
 
 I ran five variants on the same grid, same problem size, and the same **32 kB** simulated L1.
 
@@ -156,12 +164,6 @@ const int chunk_size = ((M + doublesPerCacheLine - 1) / doublesPerCacheLine) * d
 | Cache-aligned OpenMP | modest cut in invalidations vs default scheduling |
 
 The aligned schedule is a small coherence win on top of tiling, not another big drop in time. It did not replace the 16×16 blocking step.
-
-Hit rate and total memory accesses per variant:
-
-| Hit Rates | Total Memory Accesses |
-| :---: | :---: |
-| ![](/assets/blog/simulating-a-cache-with/heat-hitrates.png) | ![](/assets/blog/simulating-a-cache-with/heat-memory-accesses.png) |
 
 ---
 
