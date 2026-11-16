@@ -10,12 +10,11 @@ order: 2
 ### Software Engineer — Julius-Maximilians-Universität Würzburg
 <p class="meta">Jun 2025 – present · Würzburg, DE</p>
 
-- Designed and implemented scalable backend services for complex cultural-heritage metadata systems, supporting efficient processing and retrieval of highly structured manuscript information.
-- Architected and optimized an AI/ML pipeline for large-scale extraction of codicological, historical, and bibliographic features from semi-structured manuscript descriptions.
-- Evaluated and benchmarked multiple LLM-based extraction approaches, analyzing trade-offs between extraction accuracy, inference latency, throughput, and computational cost.
-- Developed automated validation and semantic consistency frameworks to measure extraction correctness, schema compliance, and retrieval quality.
-- Built retrieval and semantic search infrastructure integrating vector-based search, metadata filtering, and domain-specific ranking strategies.
-- Collaborated with humanities researchers and software engineers to formalize manuscript domain knowledge into reproducible data models and scalable workflows.
+- Built and maintain backend PHP systems for cultural-heritage archiving and metadata, supporting structured manuscript workflows end to end.
+- Designed multi-step agent orchestration for extraction and enrichment pipelines, with human-in-the-loop review where model output needs curator judgment.
+- LoRA-fine-tuned 0.7B/1.7B LLMs (PEFT + TRL SFT) for exact-span catalog splitting: 0/93 → 82/93 exact match on held-out gold, with ablations over rank, context, target modules, hard-case oversampling, and data quality on an 8 GB RTX 3060 Ti and L40 nodes.
+- Ran local inference on L40 GPU nodes, measuring accuracy, latency, and cost trade-offs against hosted baselines.
+- Collaborated with humanities researchers to turn domain rules into reproducible schemas, prompts, and evaluation checks.
 
 </div>
 
