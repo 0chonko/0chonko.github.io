@@ -4,50 +4,50 @@ date: 2024-07-01
 description: "An empirical investigation into why bare-metal Genoa nodes equipped with Mellanox NDR400 ConnectX-7 adapters suffered severe bandwidth drops on a shared-cable switch topology."
 ---
 
-When configuring multi-million-dollar high-performance computing (HPC) clusters, system architects rely heavily on vendor specifications. However, as any performance engineer knows, actual runtime metrics rarely align cleanly with theoretical limits. 
+Cluster architects plan around vendor specs, but runtime numbers rarely match the theoretical limits.
 
-During a network characterization study on the Dutch National Supercomputer (*Snellius*), I encountered a major bandwidth anomaly while evaluating the newer **AMD Genoa** partition against the older **AMD Rome** partition. This post documents the debugging process, the hardware limitations of shared-cable topologies, and how statistical tools like the Interquartile Range (IQR) help isolate real network anomalies from multi-tenant noise.
+During a network study on the Dutch National Supercomputer (*Snellius*), I hit a large bandwidth anomaly when comparing the newer **AMD Genoa** partition with the older **AMD Rome** partition. This post covers the debugging, the limits of shared-cable topologies, and how the Interquartile Range (IQR) helps separate real anomalies from multi-tenant noise.
 
-## The Benchmark Arena
-Our experiments targeted two distinct CPU partitions connected via InfiniBand fat-tree topologies:
-*   **Rome Partition:** Dual AMD Rome 7H12 processors (128 cores total), single-port ConnectX-6 HDR100 adapter (capped at a theoretical **100 Gb/s** inter-node).
-*   **Genoa Partition:** Dual AMD Genoa 9654 processors (192 cores total), single-port NDR400 ConnectX-7 network interface card (theoretically capable of **400 Gb/s**).
+## The Setup
+Both CPU partitions sit on InfiniBand fat-tree topologies:
+*   **Rome:** dual AMD Rome 7H12 (128 cores total), single-port ConnectX-6 HDR100 adapter (theoretical **100 Gb/s** inter-node).
+*   **Genoa:** dual AMD Genoa 9654 (192 cores total), single-port NDR400 ConnectX-7 NIC (theoretical **400 Gb/s**).
 
-To capture clean network metrics, we ran point-to-point bidirectional and unidirectional `Netgauge` and `OSU Micro-Benchmarks` on pairs of nodes distributed across the same switch or different switches.
+We ran point-to-point unidirectional and bidirectional `Netgauge` and `OSU Micro-Benchmarks` on node pairs on the same switch and on different switches.
 
-## The Anomaly: Over 85% Drop in Bandwidth
-Under native (bare-metal) execution, the Rome nodes behaved predictably, hitting a stable ceiling of **98.1 Gb/s** on both intra-rack and inter-rack tests. 
+## The Anomaly: Over 85% Bandwidth Drop
+On bare metal, Rome was predictable: a stable **98.1 Gb/s** ceiling within and across racks.
 
-However, the Genoa partition threw a massive curveball. While we recorded impressive peak bursts of **223 Gb/s** on some runs, the native Genoa setup on the *same switch* frequently hit sudden, severe degradations, dropping to **15 to 25 Gb/s**, over an 85% reduction from what the specs suggest.
+Genoa was not. Some runs peaked at **223 Gb/s**, but on the *same switch* it often dropped suddenly to **15 to 25 Gb/s**, more than 85% below what the specs suggest.
 
 ```text
 Expected Genoa NDR400: ~200 Gb/s (Intra-Node) / 400 Gb/s (Inter-Node Cable Cap)
 Observed Genoa Native:  223 Gb/s (Peak) -> 15-25 Gb/s (Degraded Swappings)
 ```
 
-## Troubleshooting the Bottleneck
-Initially, we suspected a software mismatch or a misconfigured MPI transport layer (UCX/OFI). To rule this out, we systematically isolated the hardware and topology:
+## Troubleshooting
+We first suspected software: a mismatched or misconfigured MPI transport layer (UCX/OFI). To rule that out, we isolated hardware and topology step by step.
 
-### 1. Shared Cable Topology Analysis
-By digging into the physical wire-up of the Genoa partition on Snellius, we mapped out a shared-cable architecture. To maximize port density on expensive high-speed switches, each pair of Genoa nodes shares a single physical **NDR400 (400 Gb/s) network cable**. 
+### 1. Shared-Cable Topology
+Mapping the physical wiring of the Genoa partition showed a shared-cable design. To save ports on expensive switches, each pair of Genoa nodes shares one physical **NDR400 (400 Gb/s) cable**.
 
-While this configuration is cost-effective and works well when workloads are staggered, it creates a physical bottleneck during concurrent communication bursts. If Node A and Node B share a split-cable interface and both try a bulk transfer at once, the link congests hard, dragging throughput down to the **15 to 25 Gb/s** range we kept seeing.
+That is cheap and fine when traffic is staggered. But when both nodes on a split cable run bulk transfers at once, the link congests hard, which matches the **15 to 25 Gb/s** troughs we kept seeing.
 
 ![Shared Cable Architecture](/assets/blog/shared-cable-topology.png)
 
-### 2. Differentiating Intra-Rack and Inter-Rack Noise
-To confirm whether this issue was localized to specific switch placements, we ran continuous 1-hour benchmarks. We recorded Latency and Bandwidth noise, tracking the smallest 0.1% of collected samples to capture the worst-case jitter.
+### 2. Same-Rack vs Cross-Rack Noise
+To check whether this depended on switch placement, we ran 1-hour continuous benchmarks, recording latency and bandwidth noise and tracking the smallest 0.1% of samples to capture worst-case jitter.
 
-To distinguish systemic architectural anomalies from standard multi-tenant network noise, we plotted the **Cumulative Distribution Function (CDF)** of latency and bandwidth, then summarized each run with the **Interquartile Range (IQR)**: the gap between the 25th percentile (Q1) and the 75th percentile (Q3). That window holds the middle half of samples; anything outside the usual Q1 − 1.5×IQR / Q3 + 1.5×IQR fence we treated as outliers from neighbor traffic or transient congestion.
+We plotted the **Cumulative Distribution Function (CDF)** of latency and bandwidth and summarized each run with the **IQR**: the gap between the 25th (Q1) and 75th (Q3) percentiles, i.e. the middle half of the samples. Anything outside the usual Q1 − 1.5×IQR / Q3 + 1.5×IQR fence we treated as outliers from neighbor traffic or transient congestion.
 
-On Rome, bandwidth samples clustered in a tight band around **~98 Gb/s** with a small IQR. Genoa's distribution was much wider: the same hour-long window could include bursts near **223 Gb/s** and sustained troughs in the **15 to 25 Gb/s** range, with a noticeably larger IQR once we stripped the extreme tails.
+Rome's bandwidth sat in a tight band around **~98 Gb/s** with a small IQR. Genoa's spread was much wider: one hour could include bursts near **223 Gb/s** and long troughs at **15 to 25 Gb/s**, with a clearly larger IQR even after removing the extreme tails.
 
-That outlier filtering let us separate neighbor traffic on the shared fat-tree from the Genoa partition's own instability. The data confirmed that Genoa yields higher peak throughput on paper, but also significantly more **bandwidth noise** and less stability than the mature, non-shared ConnectX-6 HDR100 links on Rome. That noise profile is worth keeping in mind next to the UCX transport issues on the same machine: sometimes the problem is software, sometimes it is a cable you share with your neighbor.
+Filtering outliers this way separated neighbor traffic on the shared fat-tree from Genoa's own instability. Genoa has the higher peak on paper, but much more **bandwidth noise** than the non-shared ConnectX-6 HDR100 links on Rome. Worth keeping in mind next to the UCX transport issues on the same machine: sometimes the problem is software, sometimes it is a cable you share with your neighbor.
 
 ## Key Takeaways
-1.  **Beware of High-Density Cabling:** Split-cable or shared-cable topologies (like NDR shared links) can introduce massive performance unpredictability. If your HPC workload is communication-dense, verify whether your target nodes share physical switch links.
-2.  **Filter with IQR:** When evaluating network noise over extended periods, avoid relying on simple averages or absolute maximums alone. The Interquartile Range gives an outlier-resistant picture of typical behavior.
-3.  **Validate Across Switches:** Always contrast same-switch performance against different-switch configurations to isolate whether a performance dip is a localized cabling bottleneck or a broader routing path issue.
+1.  **Watch out for shared cabling.** Split or shared links (like NDR shared links) make performance unpredictable. For communication-heavy jobs, check whether your nodes share physical switch links.
+2.  **Use IQR, not averages.** For long noise measurements, plain averages and maximums mislead. The IQR shows typical behavior and resists outliers.
+3.  **Compare same-switch and cross-switch.** This tells you whether a dip comes from local cabling or from a wider routing issue.
 
 ---
 
