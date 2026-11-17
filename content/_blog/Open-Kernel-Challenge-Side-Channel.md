@@ -6,6 +6,8 @@ description: "Kernel-track notes on Muse Spark Open: BF16 projection roofline, a
 
 I used the [Open Kernel Challenge](https://openkernelchallenge.dev) as a bounded side project into **SGLang** on Muse Spark Open (816B MoE, ~42B active). Goal: see where a serving stack spends time on H200, and which edits matter (library GEMM, fused prep, or a custom kernel). Budget was a few remote judge runs a day. I did not expect large gains.
 
+**Disclaimer.** Literature search, fast experiment iteration, and help implementing the papers I landed on were assisted by Cursor AI agents. All of that ran inside one $20 Cursor subscription; I used roughly half the included Composer 2.5 / Grok 4.7 quota.
+
 ---
 
 ## Challenge Shape
@@ -76,11 +78,7 @@ The judge's table ([`muse_bf16_proj/TASK.md`](https://github.com/0chonko/open-ke
 
 For each `(layer, m)`: bytes moved, mem floor, math floor. Pooler `m=1`: ~14 µs mem vs ~0.07 µs math. Qkv `m=16`: still ~8 µs mem-bound. Only the largest verify shapes approach compute-bound.
 
-![Figure 2. H200 BF16 roofline for dense projections, all five layers at decode m=1, 16, 32 and verify m=256](/assets/blog/open-kernel-challenge/h200-bf16-roofline.svg?v=3)
-
-The roofline does not separate layers. All five sit on the same memory roof at their `m`; the weight bytes in the table above set each layer's floor.
-
-When weights dominate, arithmetic intensity is roughly **m**. Decode sits on the HBM branch; custom GEMM rewrites (hollow red) never cleared the baseline that was already near the roof.
+Intensity is about **m** (the router is about m/2). Every run is placed on the roof in Figure 8 at the end.
 
 **Result.** Dropped ideas that could not beat the floor before they cost a submit.
 
@@ -93,71 +91,37 @@ When weights dominate, arithmetic intensity is roughly **m**. Decode sits on the
 
 ### Iteration path
 
-![Figure 3. BF16 projection iteration path](/assets/blog/open-kernel-challenge/bf16-iteration-path.svg)
+![Figure 2. BF16 projection iteration path](/assets/blog/open-kernel-challenge/bf16-iteration-path.svg)
 
-Board score is still `out = x @ W.T` for thin `m`. Attempts below tried different ways to implement that product.
+Board score is still `out = x @ W.T` for thin `m`. I sent 34 judge runs at this board (Figure 3). For most of them I tried to replace or retile the library GEMM, and they landed around parity or worse. The win came late, once I stopped hunting for one kernel and built the stack from pieces measured one at a time.
 
-### Rewrite the GEMM mainloop (lost)
+### Tip (+43%)
 
-Code: [`submission.py` @ f445cc7](https://github.com/0chonko/open-kernel-challenge-meta/blob/f445cc7/muse_bf16_proj/submission.py) (Stream-K), [`@ 53f3a0a`](https://github.com/0chonko/open-kernel-challenge-meta/blob/53f3a0a/muse_bf16_proj/submission.py) (WGMMA), [stream-K sketch](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/papers/sketches/stream-k-work-centric-parallel-decomposition-for-dense/gemm_kernel.cu.pp).
+Code: [`submission.py` @ a132ea6](https://github.com/0chonko/open-kernel-challenge-meta/blob/a132ea6/muse_bf16_proj/submission.py) (assembled stack), [`main`](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/muse_bf16_proj/submission.py).
 
-CUTLASS sm90 stream-K / WGMMA, hand WGMMA + `cp.async`, Triton stream-K. Idea: if nvjet pays a split-K reduce, a better split might skip it:
+Keep the library path wherever it already sits on the floor and use custom kernels only where the profile shows leftover tax. Each piece first ran alone on top of the SGLang baseline, then went onto the stack one at a time:
 
-```text
-# stream-K sketch
-for tile in split_K(W):
-    Acc += x @ tile.T
-out = reduce(Acc)
-```
+| Piece | Alone | Stacked |
+| :--- | ---: | ---: |
+| Small-`m` GEMV, 12-bit lossless + BF16 twin, `m` ≤ 32 | +27% | +26% |
+| `m=32` WGMMA / TMA GEMV ([`53f3a0a`](https://github.com/0chonko/open-kernel-challenge-meta/blob/53f3a0a/muse_bf16_proj/submission.py)) | +1% | +27% |
+| Router hi/lo BF16 on WGMMA | +17% | +40% |
+| qkv tiles | +0% | +39% |
+| wide2 + `o` layer | +4% | +42% |
+| cuBLASLt `m32w` | +5% | +44% |
 
-nvjet still won most `m>1` shapes. The job is streaming `W`, not inventing a better MMA.
-
-### Scalar FP32 router (lost)
-
-Code: [`submission.py` @ 3013eec](https://github.com/0chonko/open-kernel-challenge-meta/blob/3013eec/muse_bf16_proj/submission.py).
-
-Router is the one small FP32 matmul. Try a plain kernel and skip cast round-trips:
-
-```text
-# W_r : FP32
-out = gemv_fp32(x, W_r)    # one launch, no BF16 path
-```
-
-Router is tiny, so cast/launch tax could dominate, but this was still slower than the baseline path.
-
-### Router hi/lo BF16, FP32 accumulate (helped)
-
-Code: [`submission.py` @ d60f62b](https://github.com/0chonko/open-kernel-challenge-meta/blob/d60f62b/muse_bf16_proj/submission.py).
-
-Split each FP32 weight into two BF16 halves, run BF16 GEMM, accumulate in FP32:
+Two pieces carry almost all of it. The small-`m` GEMV repacks weights to 12 bits in the untimed `prepare()` (lossless on these weights), so decode loads read fewer bytes than the BF16 floor assumes; on its own it hit 5.6× on router verify `m=8` and 1.5× on pooler `m=1`. The router piece splits each FP32 weight into two BF16 halves and accumulates in FP32:
 
 ```text
 W ≈ W_hi + scale * W_lo      # both BF16
 out = (x @ W_hi.T) + scale * (x @ W_lo.T)   # FP32 acc
 ```
 
-BF16 tensor-core throughput without dropping router precision. First clear router win.
+That's BF16 tensor-core throughput without giving up the 0.01% router tolerance. The other four pieces are small, and qkv tiles did nothing measurable; I kept them anyway because the full stack was the best run. The tip submit scored **1.43×** (CI 1.41 to 1.45), a hair under assemble step 6, which is noise at this CI width. At decode `m=1`, pooler is already near SOL (~14.0 µs yours vs 14.0 µs floor); router is still ~2.2× the floor after the hi/lo win, so launch and cast tax still matter there.
 
-### Piecewise dispatch (kept)
+![Figure 3. Every muse_bf16_proj judge run versus SGLang](/assets/blog/open-kernel-challenge/bf16-experiment-ladder.svg)
 
-Code: [`submission.py` @ a132ea6](https://github.com/0chonko/open-kernel-challenge-meta/blob/a132ea6/muse_bf16_proj/submission.py) (assembled tip stack).
-
-One kernel does not win every shape. Route by `(layer, m)` and only override where the profile shows tax:
-
-```text
-if layer == "router":        hi_lo_bf16(...)
-elif m <= 1:                 hopper_gemv(...)
-elif layer in (o, unpooler): cublasLt_pinned(...)   # already near floor
-else:                        nvjet(...)             # qkv / pooler
-```
-
-### Tip (+43%)
-
-Code: [`muse_bf16_proj/submission.py`](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/muse_bf16_proj/submission.py).
-
-Library path where it sits on the floor; custom work only on leftover tax (mostly **router**). Tip run scored **1.43×** (CI 1.40 to 1.45). At decode `m=1`, pooler is already near SOL (~14.0 µs yours vs 14.0 µs floor); router is still ~2.2× the floor after the hi/lo win, so launch and cast tax still matter there.
-
-![Figure 4. Tip speedups per layer at decode m=1](/assets/blog/open-kernel-challenge/bf16-layer-speedups.svg)
+![Figure 4. muse_bf16_proj per-case change versus SGLang, run by layer and load](/assets/blog/open-kernel-challenge/bf16-case-heatmap.svg)
 
 | Layer (decode m=1) | vs SGLang | Yours / floor |
 | :--- | ---: | ---: |
@@ -166,7 +130,31 @@ Library path where it sits on the floor; custom work only on leftover tax (mostl
 | pooler | +53% | 1.0× |
 | unpooler | +59% | 2.4× (n = 1024 slice) |
 | router | +163% | 2.2× |
-| **Geo-mean (all loads)** | **+43%** (CI +40% to +45%) | |
+| **Geo-mean (all loads)** | **+43%** (CI +41% to +45%) | |
+
+### The rest of the ladder
+
+One line per run in Figure 3, in order (reruns merged).
+
+| Run | vs SGLang | What it tried |
+| :--- | ---: | :--- |
+| SGLang path mirror (×2) | 0% | Baseline dispatch copied as is; sets the noise band at about ±1.5%. |
+| Inline SGLang Hopper GEMV | +2% | `load_inline` SGLang's `hopper_bf16_gemv` for `m=1`. |
+| GEMV + dispatch retune | +1% | Moved which shapes take the GEMV. |
+| Custom thin-m kernel | −97% | Scalar BF16 GEMV for `m` = 8 to 32; nowhere near nvjet. |
+| G stack (3 passes) | +3% | Inline GEMV, one-launch CUDA router for `m` ≤ 8 ([`3013eec`](https://github.com/0chonko/open-kernel-challenge-meta/blob/3013eec/muse_bf16_proj/submission.py)), FlashInfer only where it beat nvjet. |
+| H: split-K resume | −3% | One-launch WMMA Stream-K on thin qkv / pooler / unpooler to skip nvjet's split-K reduce ([`f445cc7`](https://github.com/0chonko/open-kernel-challenge-meta/blob/f445cc7/muse_bf16_proj/submission.py), [sketch](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/papers/sketches/stream-k-work-centric-parallel-decomposition-for-dense/gemm_kernel.cu.pp)). |
+| J stack (×2) | +3% | G stack with the ThunderKittens WMMA kernel switched off. |
+| L: scalar FP32 router gate | −17% | Plain FP32 router kernel to skip the cast round-trips. |
+| L: FlashInfer thin-m (×2) | +9% | FlashInfer tensor-core `mm_bf16` for thin `m`, FP32 router gated to `m` ≤ 8. |
+| L: hi/lo router + FlashInfer | +9% | First hi/lo BF16 router above 8 tokens ([`d60f62b`](https://github.com/0chonko/open-kernel-challenge-meta/blob/d60f62b/muse_bf16_proj/submission.py)). |
+| L: WGMMA-wide Stream-K | +1% | Router split across 256 CTAs, WGMMA `m64n128k16` at `m=256`. |
+| L: router to m=16 | +9% | FP32 router path extended to `m=16`. |
+| M: SM90 GEMM for wide m, retile | +5%, −12% | CUTLASS SM90 GEMM on the verify shapes; the retile lost. |
+| M: SM90 GEMM, o layer | −10% | Same, plus a packed GEMV at `m=1` that lost decode badly (qkv 0.22×). |
+| FlashInfer large-m allow-list | +11% | FlashInfer widened to large `m`; best run before the piecewise rebuild. |
+
+Every hand-written mainloop lost to nvjet on `m` > 1. The job is streaming `W`, not inventing a better MMA.
 
 **Next.** Treat BF16 rewrite as last resort when profiles already show one near-SOL GEMM; spend budget on MoE boards instead.
 
@@ -234,94 +222,29 @@ Constants on scored shapes: `Hq=16`, `Hkv=2`, `D=64`, GQA=8, `page_size=1`, `kv_
 
 ![Figure 5. Attention decode iteration path](/assets/blog/open-kernel-challenge/attn-iteration-path.svg)
 
-FA3 stays the attend kernel unless noted. The hunt was for tax *around* attend.
-
-### Flash-Decoding `num_splits` (−1%)
-
-Code: [`submission.py` @ ef3a9dc](https://github.com/0chonko/open-kernel-challenge-meta/blob/ef3a9dc/muse_attention_decode/submission.py).
-
-Split the KV cache into `S` chunks, attend each chunk, then reduce partial outputs:
-
-```text
-for s in 0..S:
-    O_s, m_s, l_s = attend(Q, K[s], V[s])
-O = online_softmax_reduce(O_s, m_s, l_s)
-```
-
-Too small `S` underuses SMs; too large `S` pays for a fat reduce. Baseline was already near the sweet spot, so retuning lost a bit.
-
-### `page_size=1` flatten (~0%)
-
-Code: [`submission.py` @ bed4af3](https://github.com/0chonko/open-kernel-challenge-meta/blob/bed4af3/muse_attention_decode/submission.py).
-
-Materialize paged KV into a contiguous block before FA3:
-
-```text
-# pages[table[i]] -> flat[i * page_size : (i+1) * page_size]
-K_flat, V_flat = gather(K_pages, V_pages, page_table)
-O = FA3(Q, K_flat, V_flat)
-```
-
-Tests whether page-table indirection was the tax. It wasn't on this board.
-
-### Sage-style FP8 Q (+3%)
-
-Code: [`submission.py` @ 9558aea](https://github.com/0chonko/open-kernel-challenge-meta/blob/9558aea/muse_attention_decode/submission.py).
-
-Quantize only Q, keep the board's FP8 paged KV:
-
-```text
-Q8 = quantize_fp8(Q)
-O  = FA3(Q8, K8_paged, V8_paged)
-```
-
-Fewer bytes on the Q side. Small gain; FA3 still owned the timeline.
-
-### FA3 + fused prep / epilogue (+8%)
-
-Code: [`submission.py` @ cdcd1a9](https://github.com/0chonko/open-kernel-challenge-meta/blob/cdcd1a9/muse_attention_decode/submission.py).
-
-Collapse the launches around attend into one prep and one epilogue:
-
-```text
-# was: rmsnorm(Q) → rope(Q) → cast_fp8(Q) → FA3 → rmsnorm(O) * gate
-Q8 = fuse_rmsnorm_rope_fp8(Q, W_q)
-O  = FA3(Q8, K_paged, V_paged)
-Y  = fuse_rmsnorm_gate(O, gate)
-```
-
-Those edge kernels are real wall time even when FA3 is ~95% of the GPU. First clear win without touching the mainloop.
-
-### Custom Triton sliding mega-fuse (−55%)
-
-Code: [`submission.py` @ 60f6ec6](https://github.com/0chonko/open-kernel-challenge-meta/blob/60f6ec6/muse_attention_decode/submission.py).
-
-Replace FA3 with one Triton kernel over the sliding window:
-
-```text
-O = triton_sliding_attn(Q, K, V, window)   # no FA3
-```
-
-If fusing the edges helps, maybe fusing everything helps more. Dead end: a new attend kernel lost badly to FA3's Cutlass mainloop.
-
-### ThunderKittens tiles on the fuse tip (+10%)
-
-Code: [`submission.py` @ 024b796](https://github.com/0chonko/open-kernel-challenge-meta/blob/024b796/muse_attention_decode/submission.py), [TK sketch](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/papers/sketches/thunderkittens-simple-fast-and-adorable-ai-kernels/gemm_kernel.cu.pp).
-
-Keep the fused prep/epilogue; only change tile shapes fed to the FA3-adjacent path:
-
-```text
-# example knobs
-BLOCK_M, BLOCK_N, BLOCK_K = 64, 64, 64   # retuned
-```
-
-Once fusion is in, tile size is the remaining free variable.
+FA3 stays the attend kernel unless noted. I sent 16 judge runs here (Figure 6), and the hunt was for tax *around* attend.
 
 ### Tip (+15%)
 
 Code: [`submission.py` @ 2d001cc](https://github.com/0chonko/open-kernel-challenge-meta/blob/2d001cc/muse_attention_decode/submission.py) (FA3 fuse tip; `main` later moved to a full gated CUDA path).
 
-Best stack: FA3 kept, fused prep/epilogue, tuned tiles. Tip run scored **1.10×** on an intermediate fuse spine (CI 1.08 to 1.12); later tile retunes pushed the published tip to about **+15%** (CI +13% to +17%). Tip launch chain:
+The tip keeps SGLang's FA3 and stacks four edits around it:
+
+1. **Fused prep and epilogue (+8%,** [`cdcd1a9`](https://github.com/0chonko/open-kernel-challenge-meta/blob/cdcd1a9/muse_attention_decode/submission.py)**).** Collapse the launches around attend into one prep and one epilogue:
+
+   ```text
+   # was: rmsnorm(Q) → rope(Q) → cast_fp8(Q) → FA3 → rmsnorm(O) * gate
+   Q8 = fuse_rmsnorm_rope_fp8(Q, W_q)
+   O  = FA3(Q8, K_paged, V_paged)
+   Y  = fuse_rmsnorm_gate(O, gate)
+   ```
+
+   Those edge kernels are real wall time even when FA3 is ~95% of the GPU.
+2. **ThunderKittens 16-row tiles (+10%,** [`024b796`](https://github.com/0chonko/open-kernel-challenge-meta/blob/024b796/muse_attention_decode/submission.py), [sketch](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/papers/sketches/thunderkittens-simple-fast-and-adorable-ai-kernels/gemm_kernel.cu.pp)**).** Once fusion is in, tile shape is the remaining free variable.
+3. **DScale path tiles (+10%).** `BLOCK_M` and `num_warps` picked per path, with a larger M on big verify shapes.
+4. **Fold the gate copy into the epilogue (+15%).** On short-Q verify shapes FA returns non-row-major views, and the elementwise copy after it cost ~2 to 3 µs, a whole launch. Folding it into the Triton epilogue removes it.
+
+The tip run scored **1.15×** (CI 1.13 to 1.17). Tip launch chain:
 
 ```text
 _fused_qk_rope_store → [prepare_varlen?] → FA3 → [Combine?] → [ATen?] → _rms_norm_gate_epilogue
@@ -335,17 +258,40 @@ _fused_qk_rope_store → [prepare_varlen?] → FA3 → [Combine?] → [ATen?] �
 
 Speedup is collapsing prep/epi and small FA layout wins, not beating FA's HBM by 3×. Full large-B stays within a couple percent of SGLang. Hitting SOL on sliding alone would move the geo-mean more than another percent off huge full FA.
 
-![Figure 6. Attention experiment ladder versus SGLang](/assets/blog/open-kernel-challenge/attn-experiment-ladder.svg)
+![Figure 6. Every muse_attention_decode judge run versus SGLang](/assets/blog/open-kernel-challenge/attn-experiment-ladder.svg)
+
+![Figure 7. muse_attention_decode per-case change versus SGLang, run by layer and load](/assets/blog/open-kernel-challenge/attn-case-heatmap.svg)
+
+### The rest of the ladder
+
+One line per run in Figure 6 that isn't a tip step, in order.
+
+| Run | vs SGLang | What it tried |
+| :--- | ---: | :--- |
+| Custom Triton attend | −99.8% | Own Triton attend kernel in place of FA3 ([`60f6ec6`](https://github.com/0chonko/open-kernel-challenge-meta/blob/60f6ec6/muse_attention_decode/submission.py)). |
+| FlashInfer verify layout | +0% | Dense `[B, L, Hq, D]` Q on verify, no KV split on sliding verify; sliding verify FA got ~2× slower. |
+| FA4-style pipeline | −8% | Fused prep producer, `num_splits=1` on sliding, software-pipelined epilogue for verify. |
+| SageAttention3 FP8 Q | −21% | Microscaled FP8 Q (the judge allows E4M3, not FP4); correct but slower. |
+| Hybrid FA3 fuse + Sage | +8% | Fuse spine on scored shapes, Sage FP8 cast only for non-unity KV scales; ties the fuse. |
+| ThunderKittens, rerun | +9% | Same tiles, same answer. |
+| FuTransformer zip-fusion | +10% | FuTransformer's zip-fusion idea on the fuse spine. |
+| Merged fuse stack | +1% | Several fuse branches in one submit; the gains didn't add up. |
+| AttnFuse GQA | +10% | AttnFuse's GQA fusion on the fuse spine. |
+| Fold + FlashMask SWA | +10% | FlashMask-style sliding-window masking on the fuse spine. |
+| Strided epilogue loads | −4% | Epilogue reads FA's strided output directly instead of copying it first. |
+| Single-pass full-context GQA | −80% | Custom kernel reading each KV byte once for all 8 query heads that share it. |
+
+Three early probes aren't on the chart: a Flash-Decoding `num_splits` retune (−1%, [`ef3a9dc`](https://github.com/0chonko/open-kernel-challenge-meta/blob/ef3a9dc/muse_attention_decode/submission.py)), a `page_size=1` KV flatten (~0%, [`bed4af3`](https://github.com/0chonko/open-kernel-challenge-meta/blob/bed4af3/muse_attention_decode/submission.py)), and a Sage-style FP8 Q cast fused into QK-norm (+3%, [`9558aea`](https://github.com/0chonko/open-kernel-challenge-meta/blob/9558aea/muse_attention_decode/submission.py)). Same pattern as the projections, honestly: every run that replaced the attend mainloop lost, some by orders of magnitude, and everything that only touched the edges landed within a few percent of each other.
 
 **Next.** Keep FA3; wire the fused prep/epilogue into the full decode-layer board.
 
 ---
 
-## Scoreboard
+## All Experiments on One Roofline
 
-Same axis for every attempt I logged. Hollow markers are BF16 rewrites that never beat SGLang (no published %), so they are not drawn as fake bars.
+![Figure 8. H200 roofline with every benched case from every run on both boards](/assets/blog/open-kernel-challenge/all-experiments-roofline.svg)
 
-![Figure 7. All experiments versus SGLang](/assets/blog/open-kernel-challenge/all-experiments-scoreboard.svg)
+Each mark is one `(layer, load)` case from one judge run; color is that case's change vs SGLang, rings are the SGLang median. Wins stack up against the memory roof; losses fall straight down at the same intensity, because a slower kernel does the same work in more time. The few projection points above the roof come from the 12-bit small-`m` weight packing, which moves fewer bytes than the BF16 floor assumes. Attention triangles sit well under the roof on sliding shapes, which is the launch and fixed-cost tax from the table above.
 
 ---
 
@@ -363,9 +309,10 @@ Same axis for every attempt I logged. Hollow markers are BF16 rewrites that neve
 ## Takeaways
 
 1. Thin-M BF16 proj on H200 is mostly streaming `W`.
-2. Best submits kept nvjet/FA3 and removed tax around them (+43% proj tip, +15% attn tip).
-3. MoE boards had more leeway because those kernels are still young.
-4. A few H200 shots are enough to map where SGLang is worth patching.
+2. Best submits kept nvjet/FA3 where they sit on the floor and only replaced the tax around them: 12-bit small-`m` GEMV and hi/lo router on projections (+43%), fused edges on attention (+15%).
+3. Measure pieces alone, then stack them one at a time; the projection tip only appeared once I did that.
+4. MoE boards had more leeway because those kernels are still young.
+5. A few H200 shots are enough to map where SGLang is worth patching.
 
 ---
 

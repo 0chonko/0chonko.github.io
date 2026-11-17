@@ -1,0 +1,235 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="muse_attention_decode: per-case change vs SGLang">
+<rect width="760" height="380" fill="#ffffff"/>
+<text x="20" y="24" font-weight="600" font-size="14" fill="#1a1a1a">muse_attention_decode: per-case change vs SGLang</text>
+<text x="20" y="42" fill="#5a5a5a">Rows are runs (same order as the ladder); columns are layer × load (batch 1 / 16 / 32).</text>
+<text x="374.0" y="70" text-anchor="middle" font-weight="600" fill="#1a1a1a">sliding (×46)</text>
+<text x="270.7" y="86" text-anchor="middle" fill="#555" font-size="9">d1</text>
+<rect x="250.0" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, sliding decode 1: −99.3%</title></rect>
+<rect x="250.0" y="106" width="40.3" height="13" fill="#8ca8c7"><title>FA3 + fused prep / epilogue, sliding decode 1: +25.5%</title></rect>
+<rect x="250.0" y="120" width="40.3" height="13" fill="#86a4c5"><title>FlashInfer verify layout, sliding decode 1: +27.0%</title></rect>
+<rect x="250.0" y="134" width="40.3" height="13" fill="#c65043"><title>FA4-style pipeline, sliding decode 1: −30.0%</title></rect>
+<rect x="250.0" y="148" width="40.3" height="13" fill="#c54c40"><title>SageAttention3 FP8 Q, sliding decode 1: −30.5%</title></rect>
+<rect x="250.0" y="162" width="40.3" height="13" fill="#90abc9"><title>Hybrid FA3 fuse + Sage, sliding decode 1: +24.4%</title></rect>
+<rect x="250.0" y="176" width="40.3" height="13" fill="#8ba8c7"><title>ThunderKittens 16-row tiles, sliding decode 1: +25.6%</title></rect>
+<rect x="250.0" y="190" width="40.3" height="13" fill="#86a4c5"><title>ThunderKittens, rerun, sliding decode 1: +27.0%</title></rect>
+<rect x="250.0" y="204" width="40.3" height="13" fill="#83a2c3"><title>FuTransformer zip-fusion, sliding decode 1: +27.9%</title></rect>
+<rect x="250.0" y="218" width="40.3" height="13" fill="#84a3c4"><title>Merged fuse stack, sliding decode 1: +27.5%</title></rect>
+<rect x="250.0" y="232" width="40.3" height="13" fill="#84a3c4"><title>AttnFuse GQA, sliding decode 1: +27.5%</title></rect>
+<rect x="250.0" y="246" width="40.3" height="13" fill="#80a0c2"><title>Fold + FlashMask SWA, sliding decode 1: +28.6%</title></rect>
+<rect x="250.0" y="260" width="40.3" height="13" fill="#89a6c6"><title>DScale Hopper verify, sliding decode 1: +26.2%</title></rect>
+<rect x="250.0" y="274" width="40.3" height="13" fill="#c54b3e"><title>Strided epilogue loads, sliding decode 1: −30.7%</title></rect>
+<rect x="250.0" y="288" width="40.3" height="13" fill="#95afcb"><title>Single-pass full-context GQA, sliding decode 1: +22.9%</title></rect>
+<rect x="250.0" y="302" width="40.3" height="13" fill="#8faac8"><title>Tip: gate copy folded, sliding decode 1: +24.6%</title></rect>
+<text x="312.0" y="86" text-anchor="middle" fill="#555" font-size="9">d16</text>
+<rect x="291.3" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, sliding decode 16: −99.9%</title></rect>
+<rect x="291.3" y="106" width="40.3" height="13" fill="#b2c4d7"><title>FA3 + fused prep / epilogue, sliding decode 16: +15.3%</title></rect>
+<rect x="291.3" y="120" width="40.3" height="13" fill="#aec1d6"><title>FlashInfer verify layout, sliding decode 16: +16.1%</title></rect>
+<rect x="291.3" y="134" width="40.3" height="13" fill="#dfada8"><title>FA4-style pipeline, sliding decode 16: −14.0%</title></rect>
+<rect x="291.3" y="148" width="40.3" height="13" fill="#dda59f"><title>SageAttention3 FP8 Q, sliding decode 16: −15.5%</title></rect>
+<rect x="291.3" y="162" width="40.3" height="13" fill="#acc0d5"><title>Hybrid FA3 fuse + Sage, sliding decode 16: +16.7%</title></rect>
+<rect x="291.3" y="176" width="40.3" height="13" fill="#acc0d5"><title>ThunderKittens 16-row tiles, sliding decode 16: +16.7%</title></rect>
+<rect x="291.3" y="190" width="40.3" height="13" fill="#b1c3d6"><title>ThunderKittens, rerun, sliding decode 16: +15.6%</title></rect>
+<rect x="291.3" y="204" width="40.3" height="13" fill="#bfcddc"><title>FuTransformer zip-fusion, sliding decode 16: +12.0%</title></rect>
+<rect x="291.3" y="218" width="40.3" height="13" fill="#aabed4"><title>Merged fuse stack, sliding decode 16: +17.4%</title></rect>
+<rect x="291.3" y="232" width="40.3" height="13" fill="#aec1d5"><title>AttnFuse GQA, sliding decode 16: +16.3%</title></rect>
+<rect x="291.3" y="246" width="40.3" height="13" fill="#aec1d5"><title>Fold + FlashMask SWA, sliding decode 16: +16.3%</title></rect>
+<rect x="291.3" y="260" width="40.3" height="13" fill="#adc0d5"><title>DScale Hopper verify, sliding decode 16: +16.4%</title></rect>
+<rect x="291.3" y="274" width="40.3" height="13" fill="#ebdad8"><title>Strided epilogue loads, sliding decode 16: −5.1%</title></rect>
+<rect x="291.3" y="288" width="40.3" height="13" fill="#7094bb"><title>Single-pass full-context GQA, sliding decode 16: +33.3%</title></rect>
+<rect x="291.3" y="302" width="40.3" height="13" fill="#7195bc"><title>Tip: gate copy folded, sliding decode 16: +33.2%</title></rect>
+<text x="353.3" y="86" text-anchor="middle" fill="#555" font-size="9">d32</text>
+<rect x="332.7" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, sliding decode 32: −100.0%</title></rect>
+<rect x="332.7" y="106" width="40.3" height="13" fill="#c3d0de"><title>FA3 + fused prep / epilogue, sliding decode 32: +11.1%</title></rect>
+<rect x="332.7" y="120" width="40.3" height="13" fill="#bdccdc"><title>FlashInfer verify layout, sliding decode 32: +12.5%</title></rect>
+<rect x="332.7" y="134" width="40.3" height="13" fill="#f2f1f0"><title>FA4-style pipeline, sliding decode 32: −0.3%</title></rect>
+<rect x="332.7" y="148" width="40.3" height="13" fill="#efe8e7"><title>SageAttention3 FP8 Q, sliding decode 32: −2.2%</title></rect>
+<rect x="332.7" y="162" width="40.3" height="13" fill="#bdccdc"><title>Hybrid FA3 fuse + Sage, sliding decode 32: +12.5%</title></rect>
+<rect x="332.7" y="176" width="40.3" height="13" fill="#b8c8d9"><title>ThunderKittens 16-row tiles, sliding decode 32: +13.8%</title></rect>
+<rect x="332.7" y="190" width="40.3" height="13" fill="#b9c9da"><title>ThunderKittens, rerun, sliding decode 32: +13.6%</title></rect>
+<rect x="332.7" y="204" width="40.3" height="13" fill="#c3d0de"><title>FuTransformer zip-fusion, sliding decode 32: +11.0%</title></rect>
+<rect x="332.7" y="218" width="40.3" height="13" fill="#b8c8da"><title>Merged fuse stack, sliding decode 32: +13.6%</title></rect>
+<rect x="332.7" y="232" width="40.3" height="13" fill="#b0c2d6"><title>AttnFuse GQA, sliding decode 32: +15.8%</title></rect>
+<rect x="332.7" y="246" width="40.3" height="13" fill="#b9c9da"><title>Fold + FlashMask SWA, sliding decode 32: +13.5%</title></rect>
+<rect x="332.7" y="260" width="40.3" height="13" fill="#b5c6d8"><title>DScale Hopper verify, sliding decode 32: +14.4%</title></rect>
+<rect x="332.7" y="274" width="40.3" height="13" fill="#cbd6e2"><title>Strided epilogue loads, sliding decode 32: +9.0%</title></rect>
+<rect x="332.7" y="288" width="40.3" height="13" fill="#88a6c6"><title>Single-pass full-context GQA, sliding decode 32: +26.4%</title></rect>
+<rect x="332.7" y="302" width="40.3" height="13" fill="#84a3c4"><title>Tip: gate copy folded, sliding decode 32: +27.6%</title></rect>
+<text x="394.7" y="86" text-anchor="middle" fill="#555" font-size="9">v1</text>
+<rect x="374.0" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, sliding verify 1: −99.4%</title></rect>
+<rect x="374.0" y="106" width="40.3" height="13" fill="#a8bdd3"><title>FA3 + fused prep / epilogue, sliding verify 1: +17.8%</title></rect>
+<rect x="374.0" y="120" width="40.3" height="13" fill="#c34235"><title>FlashInfer verify layout, sliding verify 1: −31.9%</title></rect>
+<rect x="374.0" y="134" width="40.3" height="13" fill="#c24134"><title>FA4-style pipeline, sliding verify 1: −32.1%</title></rect>
+<rect x="374.0" y="148" width="40.3" height="13" fill="#c0392b"><title>SageAttention3 FP8 Q, sliding verify 1: −52.3%</title></rect>
+<rect x="374.0" y="162" width="40.3" height="13" fill="#b2c4d7"><title>Hybrid FA3 fuse + Sage, sliding verify 1: +15.3%</title></rect>
+<rect x="374.0" y="176" width="40.3" height="13" fill="#a6bbd2"><title>ThunderKittens 16-row tiles, sliding verify 1: +18.5%</title></rect>
+<rect x="374.0" y="190" width="40.3" height="13" fill="#adc0d5"><title>ThunderKittens, rerun, sliding verify 1: +16.5%</title></rect>
+<rect x="374.0" y="204" width="40.3" height="13" fill="#9cb4ce"><title>FuTransformer zip-fusion, sliding verify 1: +20.9%</title></rect>
+<rect x="374.0" y="218" width="40.3" height="13" fill="#c34336"><title>Merged fuse stack, sliding verify 1: −31.9%</title></rect>
+<rect x="374.0" y="232" width="40.3" height="13" fill="#9cb4ce"><title>AttnFuse GQA, sliding verify 1: +21.1%</title></rect>
+<rect x="374.0" y="246" width="40.3" height="13" fill="#a0b7cf"><title>Fold + FlashMask SWA, sliding verify 1: +20.0%</title></rect>
+<rect x="374.0" y="260" width="40.3" height="13" fill="#9db4ce"><title>DScale Hopper verify, sliding verify 1: +20.8%</title></rect>
+<rect x="374.0" y="274" width="40.3" height="13" fill="#cf7067"><title>Strided epilogue loads, sliding verify 1: −24.7%</title></rect>
+<rect x="374.0" y="288" width="40.3" height="13" fill="#517eae"><title>Single-pass full-context GQA, sliding verify 1: +43.0%</title></rect>
+<rect x="374.0" y="302" width="40.3" height="13" fill="#537faf"><title>Tip: gate copy folded, sliding verify 1: +42.3%</title></rect>
+<text x="436.0" y="86" text-anchor="middle" fill="#555" font-size="9">v16</text>
+<rect x="415.3" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, sliding verify 16: −100.0%</title></rect>
+<rect x="415.3" y="106" width="40.3" height="13" fill="#b7c7d9"><title>FA3 + fused prep / epilogue, sliding verify 16: +14.1%</title></rect>
+<rect x="415.3" y="120" width="40.3" height="13" fill="#e2b6b1"><title>FlashInfer verify layout, sliding verify 16: −12.3%</title></rect>
+<rect x="415.3" y="134" width="40.3" height="13" fill="#e3bcb8"><title>FA4-style pipeline, sliding verify 16: −11.2%</title></rect>
+<rect x="415.3" y="148" width="40.3" height="13" fill="#c0392b"><title>SageAttention3 FP8 Q, sliding verify 16: −54.6%</title></rect>
+<rect x="415.3" y="162" width="40.3" height="13" fill="#b8c8da"><title>Hybrid FA3 fuse + Sage, sliding verify 16: +13.7%</title></rect>
+<rect x="415.3" y="176" width="40.3" height="13" fill="#96b0cb"><title>ThunderKittens 16-row tiles, sliding verify 16: +22.5%</title></rect>
+<rect x="415.3" y="190" width="40.3" height="13" fill="#abbfd4"><title>ThunderKittens, rerun, sliding verify 16: +17.1%</title></rect>
+<rect x="415.3" y="204" width="40.3" height="13" fill="#9ab3cd"><title>FuTransformer zip-fusion, sliding verify 16: +21.5%</title></rect>
+<rect x="415.3" y="218" width="40.3" height="13" fill="#e3bcb8"><title>Merged fuse stack, sliding verify 16: −11.2%</title></rect>
+<rect x="415.3" y="232" width="40.3" height="13" fill="#9ab2cd"><title>AttnFuse GQA, sliding verify 16: +21.6%</title></rect>
+<rect x="415.3" y="246" width="40.3" height="13" fill="#98b1cc"><title>Fold + FlashMask SWA, sliding verify 16: +22.0%</title></rect>
+<rect x="415.3" y="260" width="40.3" height="13" fill="#9eb6cf"><title>DScale Hopper verify, sliding verify 16: +20.4%</title></rect>
+<rect x="415.3" y="274" width="40.3" height="13" fill="#f0e9e9"><title>Strided epilogue loads, sliding verify 16: −1.9%</title></rect>
+<rect x="415.3" y="288" width="40.3" height="13" fill="#628ab5"><title>Single-pass full-context GQA, sliding verify 16: +37.6%</title></rect>
+<rect x="415.3" y="302" width="40.3" height="13" fill="#638bb6"><title>Tip: gate copy folded, sliding verify 16: +37.3%</title></rect>
+<text x="477.3" y="86" text-anchor="middle" fill="#555" font-size="9">v32</text>
+<rect x="456.7" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, sliding verify 32: −100.0%</title></rect>
+<rect x="456.7" y="106" width="40.3" height="13" fill="#d7dee7"><title>FA3 + fused prep / epilogue, sliding verify 32: +6.2%</title></rect>
+<rect x="456.7" y="120" width="40.3" height="13" fill="#eee3e2"><title>FlashInfer verify layout, sliding verify 32: −3.1%</title></rect>
+<rect x="456.7" y="134" width="40.3" height="13" fill="#e7eaed"><title>FA4-style pipeline, sliding verify 32: +2.6%</title></rect>
+<rect x="456.7" y="148" width="40.3" height="13" fill="#c0392b"><title>SageAttention3 FP8 Q, sliding verify 32: −47.8%</title></rect>
+<rect x="456.7" y="162" width="40.3" height="13" fill="#d5dde6"><title>Hybrid FA3 fuse + Sage, sliding verify 32: +6.6%</title></rect>
+<rect x="456.7" y="176" width="40.3" height="13" fill="#a9bdd3"><title>ThunderKittens 16-row tiles, sliding verify 32: +17.7%</title></rect>
+<rect x="456.7" y="190" width="40.3" height="13" fill="#b6c7d9"><title>ThunderKittens, rerun, sliding verify 32: +14.2%</title></rect>
+<rect x="456.7" y="204" width="40.3" height="13" fill="#afc1d6"><title>FuTransformer zip-fusion, sliding verify 32: +16.1%</title></rect>
+<rect x="456.7" y="218" width="40.3" height="13" fill="#e8ebee"><title>Merged fuse stack, sliding verify 32: +2.2%</title></rect>
+<rect x="456.7" y="232" width="40.3" height="13" fill="#a8bdd3"><title>AttnFuse GQA, sliding verify 32: +17.8%</title></rect>
+<rect x="456.7" y="246" width="40.3" height="13" fill="#adc0d5"><title>Fold + FlashMask SWA, sliding verify 32: +16.5%</title></rect>
+<rect x="456.7" y="260" width="40.3" height="13" fill="#b4c5d8"><title>DScale Hopper verify, sliding verify 32: +14.7%</title></rect>
+<rect x="456.7" y="274" width="40.3" height="13" fill="#c4d1df"><title>Strided epilogue loads, sliding verify 32: +10.8%</title></rect>
+<rect x="456.7" y="288" width="40.3" height="13" fill="#7d9ec1"><title>Single-pass full-context GQA, sliding verify 32: +29.6%</title></rect>
+<rect x="456.7" y="302" width="40.3" height="13" fill="#7f9fc2"><title>Tip: gate copy folded, sliding verify 32: +29.0%</title></rect>
+<text x="626.0" y="70" text-anchor="middle" font-weight="600" fill="#1a1a1a">full (×16)</text>
+<text x="522.7" y="86" text-anchor="middle" fill="#555" font-size="9">d1</text>
+<rect x="502.0" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, full decode 1: −98.9%</title></rect>
+<rect x="502.0" y="106" width="40.3" height="13" fill="#b1c3d7"><title>FA3 + fused prep / epilogue, full decode 1: +15.6%</title></rect>
+<rect x="502.0" y="120" width="40.3" height="13" fill="#adc0d5"><title>FlashInfer verify layout, full decode 1: +16.5%</title></rect>
+<rect x="502.0" y="134" width="40.3" height="13" fill="#aabed4"><title>FA4-style pipeline, full decode 1: +17.2%</title></rect>
+<rect x="502.0" y="148" width="40.3" height="13" fill="#b5c6d8"><title>SageAttention3 FP8 Q, full decode 1: +14.6%</title></rect>
+<rect x="502.0" y="162" width="40.3" height="13" fill="#b1c3d7"><title>Hybrid FA3 fuse + Sage, full decode 1: +15.6%</title></rect>
+<rect x="502.0" y="176" width="40.3" height="13" fill="#b4c5d8"><title>ThunderKittens 16-row tiles, full decode 1: +14.8%</title></rect>
+<rect x="502.0" y="190" width="40.3" height="13" fill="#afc1d6"><title>ThunderKittens, rerun, full decode 1: +16.1%</title></rect>
+<rect x="502.0" y="204" width="40.3" height="13" fill="#afc2d6"><title>FuTransformer zip-fusion, full decode 1: +16.0%</title></rect>
+<rect x="502.0" y="218" width="40.3" height="13" fill="#b2c4d7"><title>Merged fuse stack, full decode 1: +15.2%</title></rect>
+<rect x="502.0" y="232" width="40.3" height="13" fill="#afc2d6"><title>AttnFuse GQA, full decode 1: +16.0%</title></rect>
+<rect x="502.0" y="246" width="40.3" height="13" fill="#b2c4d7"><title>Fold + FlashMask SWA, full decode 1: +15.1%</title></rect>
+<rect x="502.0" y="260" width="40.3" height="13" fill="#b0c3d6"><title>DScale Hopper verify, full decode 1: +15.7%</title></rect>
+<rect x="502.0" y="274" width="40.3" height="13" fill="#b3c5d8"><title>Strided epilogue loads, full decode 1: +14.9%</title></rect>
+<rect x="502.0" y="288" width="40.3" height="13" fill="#c0392b"><title>Single-pass full-context GQA, full decode 1: −60.3%</title></rect>
+<rect x="502.0" y="302" width="40.3" height="13" fill="#afc1d6"><title>Tip: gate copy folded, full decode 1: +16.1%</title></rect>
+<text x="564.0" y="86" text-anchor="middle" fill="#555" font-size="9">d16</text>
+<rect x="543.3" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, full decode 16: −99.6%</title></rect>
+<rect x="543.3" y="106" width="40.3" height="13" fill="#ebedef"><title>FA3 + fused prep / epilogue, full decode 16: +1.6%</title></rect>
+<rect x="543.3" y="120" width="40.3" height="13" fill="#eaecef"><title>FlashInfer verify layout, full decode 16: +1.7%</title></rect>
+<rect x="543.3" y="134" width="40.3" height="13" fill="#eaecef"><title>FA4-style pipeline, full decode 16: +1.8%</title></rect>
+<rect x="543.3" y="148" width="40.3" height="13" fill="#ebedef"><title>SageAttention3 FP8 Q, full decode 16: +1.6%</title></rect>
+<rect x="543.3" y="162" width="40.3" height="13" fill="#ecedef"><title>Hybrid FA3 fuse + Sage, full decode 16: +1.4%</title></rect>
+<rect x="543.3" y="176" width="40.3" height="13" fill="#ebedef"><title>ThunderKittens 16-row tiles, full decode 16: +1.6%</title></rect>
+<rect x="543.3" y="190" width="40.3" height="13" fill="#ebedef"><title>ThunderKittens, rerun, full decode 16: +1.5%</title></rect>
+<rect x="543.3" y="204" width="40.3" height="13" fill="#edeff0"><title>FuTransformer zip-fusion, full decode 16: +1.0%</title></rect>
+<rect x="543.3" y="218" width="40.3" height="13" fill="#ebedef"><title>Merged fuse stack, full decode 16: +1.6%</title></rect>
+<rect x="543.3" y="232" width="40.3" height="13" fill="#ebedef"><title>AttnFuse GQA, full decode 16: +1.7%</title></rect>
+<rect x="543.3" y="246" width="40.3" height="13" fill="#eaedef"><title>Fold + FlashMask SWA, full decode 16: +1.7%</title></rect>
+<rect x="543.3" y="260" width="40.3" height="13" fill="#eaedef"><title>DScale Hopper verify, full decode 16: +1.7%</title></rect>
+<rect x="543.3" y="274" width="40.3" height="13" fill="#e4e8ec"><title>Strided epilogue loads, full decode 16: +3.1%</title></rect>
+<rect x="543.3" y="288" width="40.3" height="13" fill="#c0392b"><title>Single-pass full-context GQA, full decode 16: −68.4%</title></rect>
+<rect x="543.3" y="302" width="40.3" height="13" fill="#e4e8ec"><title>Tip: gate copy folded, full decode 16: +3.2%</title></rect>
+<text x="605.3" y="86" text-anchor="middle" fill="#555" font-size="9">d32</text>
+<rect x="584.7" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, full decode 32: −99.6%</title></rect>
+<rect x="584.7" y="106" width="40.3" height="13" fill="#eeeff0"><title>FA3 + fused prep / epilogue, full decode 32: +0.9%</title></rect>
+<rect x="584.7" y="120" width="40.3" height="13" fill="#eeeff0"><title>FlashInfer verify layout, full decode 32: +0.9%</title></rect>
+<rect x="584.7" y="134" width="40.3" height="13" fill="#eeeff0"><title>FA4-style pipeline, full decode 32: +0.9%</title></rect>
+<rect x="584.7" y="148" width="40.3" height="13" fill="#eff0f1"><title>SageAttention3 FP8 Q, full decode 32: +0.7%</title></rect>
+<rect x="584.7" y="162" width="40.3" height="13" fill="#eff0f1"><title>Hybrid FA3 fuse + Sage, full decode 32: +0.7%</title></rect>
+<rect x="584.7" y="176" width="40.3" height="13" fill="#eeeff0"><title>ThunderKittens 16-row tiles, full decode 32: +1.0%</title></rect>
+<rect x="584.7" y="190" width="40.3" height="13" fill="#edeef0"><title>ThunderKittens, rerun, full decode 32: +1.1%</title></rect>
+<rect x="584.7" y="204" width="40.3" height="13" fill="#eff0f1"><title>FuTransformer zip-fusion, full decode 32: +0.6%</title></rect>
+<rect x="584.7" y="218" width="40.3" height="13" fill="#eeeff1"><title>Merged fuse stack, full decode 32: +0.8%</title></rect>
+<rect x="584.7" y="232" width="40.3" height="13" fill="#eeeff0"><title>AttnFuse GQA, full decode 32: +0.9%</title></rect>
+<rect x="584.7" y="246" width="40.3" height="13" fill="#eeeff0"><title>Fold + FlashMask SWA, full decode 32: +0.8%</title></rect>
+<rect x="584.7" y="260" width="40.3" height="13" fill="#eeeff0"><title>DScale Hopper verify, full decode 32: +1.0%</title></rect>
+<rect x="584.7" y="274" width="40.3" height="13" fill="#ebedef"><title>Strided epilogue loads, full decode 32: +1.5%</title></rect>
+<rect x="584.7" y="288" width="40.3" height="13" fill="#c0392b"><title>Single-pass full-context GQA, full decode 32: −69.1%</title></rect>
+<rect x="584.7" y="302" width="40.3" height="13" fill="#eaecef"><title>Tip: gate copy folded, full decode 32: +1.7%</title></rect>
+<text x="646.7" y="86" text-anchor="middle" fill="#555" font-size="9">v1</text>
+<rect x="626.0" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, full verify 1: −99.0%</title></rect>
+<rect x="626.0" y="106" width="40.3" height="13" fill="#ccd7e2"><title>FA3 + fused prep / epilogue, full verify 1: +8.8%</title></rect>
+<rect x="626.0" y="120" width="40.3" height="13" fill="#bacada"><title>FlashInfer verify layout, full verify 1: +13.2%</title></rect>
+<rect x="626.0" y="134" width="40.3" height="13" fill="#c5d1df"><title>FA4-style pipeline, full verify 1: +10.6%</title></rect>
+<rect x="626.0" y="148" width="40.3" height="13" fill="#d17970"><title>SageAttention3 FP8 Q, full verify 1: −23.3%</title></rect>
+<rect x="626.0" y="162" width="40.3" height="13" fill="#cad5e1"><title>Hybrid FA3 fuse + Sage, full verify 1: +9.3%</title></rect>
+<rect x="626.0" y="176" width="40.3" height="13" fill="#b9c9da"><title>ThunderKittens 16-row tiles, full verify 1: +13.4%</title></rect>
+<rect x="626.0" y="190" width="40.3" height="13" fill="#c8d4e1"><title>ThunderKittens, rerun, full verify 1: +9.6%</title></rect>
+<rect x="626.0" y="204" width="40.3" height="13" fill="#b5c6d8"><title>FuTransformer zip-fusion, full verify 1: +14.6%</title></rect>
+<rect x="626.0" y="218" width="40.3" height="13" fill="#bccbdb"><title>Merged fuse stack, full verify 1: +12.7%</title></rect>
+<rect x="626.0" y="232" width="40.3" height="13" fill="#b3c5d8"><title>AttnFuse GQA, full verify 1: +14.9%</title></rect>
+<rect x="626.0" y="246" width="40.3" height="13" fill="#b3c4d7"><title>Fold + FlashMask SWA, full verify 1: +15.0%</title></rect>
+<rect x="626.0" y="260" width="40.3" height="13" fill="#b3c5d7"><title>DScale Hopper verify, full verify 1: +15.0%</title></rect>
+<rect x="626.0" y="274" width="40.3" height="13" fill="#91acc9"><title>Strided epilogue loads, full verify 1: +23.9%</title></rect>
+<rect x="626.0" y="288" width="40.3" height="13" fill="#c0392b"><title>Single-pass full-context GQA, full verify 1: −92.2%</title></rect>
+<rect x="626.0" y="302" width="40.3" height="13" fill="#8ba8c7"><title>Tip: gate copy folded, full verify 1: +25.6%</title></rect>
+<text x="688.0" y="86" text-anchor="middle" fill="#555" font-size="9">v16</text>
+<rect x="667.3" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, full verify 16: −99.7%</title></rect>
+<rect x="667.3" y="106" width="40.3" height="13" fill="#ebedef"><title>FA3 + fused prep / epilogue, full verify 16: +1.5%</title></rect>
+<rect x="667.3" y="120" width="40.3" height="13" fill="#e8ebee"><title>FlashInfer verify layout, full verify 16: +2.3%</title></rect>
+<rect x="667.3" y="134" width="40.3" height="13" fill="#e8ebee"><title>FA4-style pipeline, full verify 16: +2.3%</title></rect>
+<rect x="667.3" y="148" width="40.3" height="13" fill="#e2b8b3"><title>SageAttention3 FP8 Q, full verify 16: −12.0%</title></rect>
+<rect x="667.3" y="162" width="40.3" height="13" fill="#ebedef"><title>Hybrid FA3 fuse + Sage, full verify 16: +1.6%</title></rect>
+<rect x="667.3" y="176" width="40.3" height="13" fill="#e7eaed"><title>ThunderKittens 16-row tiles, full verify 16: +2.5%</title></rect>
+<rect x="667.3" y="190" width="40.3" height="13" fill="#e9ebee"><title>ThunderKittens, rerun, full verify 16: +2.1%</title></rect>
+<rect x="667.3" y="204" width="40.3" height="13" fill="#e6e9ed"><title>FuTransformer zip-fusion, full verify 16: +2.8%</title></rect>
+<rect x="667.3" y="218" width="40.3" height="13" fill="#e6e9ed"><title>Merged fuse stack, full verify 16: +2.7%</title></rect>
+<rect x="667.3" y="232" width="40.3" height="13" fill="#e6e9ed"><title>AttnFuse GQA, full verify 16: +2.8%</title></rect>
+<rect x="667.3" y="246" width="40.3" height="13" fill="#e6e9ed"><title>Fold + FlashMask SWA, full verify 16: +2.7%</title></rect>
+<rect x="667.3" y="260" width="40.3" height="13" fill="#e6e9ed"><title>DScale Hopper verify, full verify 16: +2.8%</title></rect>
+<rect x="667.3" y="274" width="40.3" height="13" fill="#e0e5ea"><title>Strided epilogue loads, full verify 16: +4.2%</title></rect>
+<rect x="667.3" y="288" width="40.3" height="13" fill="#c0392b"><title>Single-pass full-context GQA, full verify 16: −95.4%</title></rect>
+<rect x="667.3" y="302" width="40.3" height="13" fill="#dfe4ea"><title>Tip: gate copy folded, full verify 16: +4.3%</title></rect>
+<text x="729.3" y="86" text-anchor="middle" fill="#555" font-size="9">v32</text>
+<rect x="708.7" y="92" width="40.3" height="13" fill="#c0392b"><title>Custom Triton attend, full verify 32: −99.7%</title></rect>
+<rect x="708.7" y="106" width="40.3" height="13" fill="#f0f1f1"><title>FA3 + fused prep / epilogue, full verify 32: +0.5%</title></rect>
+<rect x="708.7" y="120" width="40.3" height="13" fill="#eeeff0"><title>FlashInfer verify layout, full verify 32: +0.9%</title></rect>
+<rect x="708.7" y="134" width="40.3" height="13" fill="#edeef0"><title>FA4-style pipeline, full verify 32: +1.2%</title></rect>
+<rect x="708.7" y="148" width="40.3" height="13" fill="#e9d1ce"><title>SageAttention3 FP8 Q, full verify 32: −7.1%</title></rect>
+<rect x="708.7" y="162" width="40.3" height="13" fill="#f0f0f1"><title>Hybrid FA3 fuse + Sage, full verify 32: +0.5%</title></rect>
+<rect x="708.7" y="176" width="40.3" height="13" fill="#ebedef"><title>ThunderKittens 16-row tiles, full verify 32: +1.6%</title></rect>
+<rect x="708.7" y="190" width="40.3" height="13" fill="#eceef0"><title>ThunderKittens, rerun, full verify 32: +1.3%</title></rect>
+<rect x="708.7" y="204" width="40.3" height="13" fill="#ebedef"><title>FuTransformer zip-fusion, full verify 32: +1.5%</title></rect>
+<rect x="708.7" y="218" width="40.3" height="13" fill="#eceef0"><title>Merged fuse stack, full verify 32: +1.3%</title></rect>
+<rect x="708.7" y="232" width="40.3" height="13" fill="#ebedef"><title>AttnFuse GQA, full verify 32: +1.5%</title></rect>
+<rect x="708.7" y="246" width="40.3" height="13" fill="#eceeef"><title>Fold + FlashMask SWA, full verify 32: +1.4%</title></rect>
+<rect x="708.7" y="260" width="40.3" height="13" fill="#ebedef"><title>DScale Hopper verify, full verify 32: +1.5%</title></rect>
+<rect x="708.7" y="274" width="40.3" height="13" fill="#e9ebee"><title>Strided epilogue loads, full verify 32: +2.1%</title></rect>
+<rect x="708.7" y="288" width="40.3" height="13" fill="#c0392b"><title>Single-pass full-context GQA, full verify 32: −95.6%</title></rect>
+<rect x="708.7" y="302" width="40.3" height="13" fill="#e8ebee"><title>Tip: gate copy folded, full verify 32: +2.3%</title></rect>
+<text x="242" y="102" text-anchor="end" fill="#1a1a1a">Custom Triton attend</text>
+<text x="242" y="116" text-anchor="end" fill="#1a1a1a">FA3 + fused prep / epilogue</text>
+<text x="242" y="130" text-anchor="end" fill="#1a1a1a">FlashInfer verify layout</text>
+<text x="242" y="144" text-anchor="end" fill="#1a1a1a">FA4-style pipeline</text>
+<text x="242" y="158" text-anchor="end" fill="#1a1a1a">SageAttention3 FP8 Q</text>
+<text x="242" y="172" text-anchor="end" fill="#1a1a1a">Hybrid FA3 fuse + Sage</text>
+<text x="242" y="186" text-anchor="end" fill="#1a1a1a">ThunderKittens 16-row tiles</text>
+<text x="242" y="200" text-anchor="end" fill="#1a1a1a">ThunderKittens, rerun</text>
+<text x="242" y="214" text-anchor="end" fill="#1a1a1a">FuTransformer zip-fusion</text>
+<text x="242" y="228" text-anchor="end" fill="#1a1a1a">Merged fuse stack</text>
+<text x="242" y="242" text-anchor="end" fill="#1a1a1a">AttnFuse GQA</text>
+<text x="242" y="256" text-anchor="end" fill="#1a1a1a">Fold + FlashMask SWA</text>
+<text x="242" y="270" text-anchor="end" fill="#1a1a1a">DScale Hopper verify</text>
+<text x="242" y="284" text-anchor="end" fill="#1a1a1a">Strided epilogue loads</text>
+<text x="242" y="298" text-anchor="end" fill="#1a1a1a">Single-pass full-context GQA</text>
+<text x="242" y="312" text-anchor="end" font-weight="600" fill="#1a1a1a">Tip: gate copy folded</text>
+<rect x="249" y="301" width="501" height="15" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+<defs><linearGradient id="g"><stop offset="0" stop-color="#c0392b"/><stop offset=".5" stop-color="#f2f2f2"/><stop offset="1" stop-color="#3b6ea5"/></linearGradient></defs>
+<rect x="250" y="336" width="200" height="10" fill="url(#g)" stroke="#e6e6e6"/>
+<text x="250" y="360" text-anchor="middle" fill="#555" font-size="11">≤ −33%</text>
+<text x="350.0" y="360" text-anchor="middle" fill="#555" font-size="11">0%</text>
+<text x="450" y="360" text-anchor="middle" fill="#555" font-size="11">≥ +50%</text>
+<text x="350.0" y="332" text-anchor="middle" fill="#555" font-size="11">per-case change vs SGLang</text>
+<text x="480" y="346" fill="#555" font-size="11">verify = 8-token block</text>
+</svg>
