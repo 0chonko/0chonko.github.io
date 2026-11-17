@@ -2,6 +2,7 @@
 layout: default
 section_label: Résumé
 ---
+<p class="mobile-desktop-note">Open in desktop mode for the full layout.</p>
 {% assign sections = site.resume | sort: "order" %}
 {% for section in sections %}
 <section id="{{ section.slug }}" class="resume-section">

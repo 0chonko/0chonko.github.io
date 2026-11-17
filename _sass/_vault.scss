@@ -652,6 +652,10 @@ nav a.nav-blog-entry.is-active .nav-entry-date {
   text-underline-offset: 2px;
 }
 
+.mobile-desktop-note {
+  display: none;
+}
+
 @media (max-width: 768px) {
   body { padding: 0.35rem; }
   .cornell-header { grid-template-columns: 1fr; }
@@ -679,4 +683,10 @@ nav a.nav-blog-entry.is-active .nav-entry-date {
   #content-wrap.cornell-notes { padding: 0.75rem 1rem 2rem; }
   .header-actions { margin-left: 0; width: 100%; }
   .site-footer { text-align: left; }
+  .mobile-desktop-note {
+    display: block;
+    margin: 0 0 0.75rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
 }
