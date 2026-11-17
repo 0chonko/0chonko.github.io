@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 680" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Scoreboard of all Open Kernel Challenge experiments as percent change versus SGLang">
+  <rect width="760" height="680" fill="#ffffff"/>
+  <text x="20" y="26" font-weight="600" fill="#1a1a1a">All experiments: percent change vs SGLang</text>
+  <text x="20" y="44" fill="#5a5a5a">BF16 tip layers at decode m=1. Attention values are board geo-means. Hollow markers = lost submits (no winning %).</text>
+
+  <line x1="300" y1="68" x2="300" y2="620" stroke="#b5b5b5" stroke-dasharray="4 3"/>
+  <text x="300" y="62" text-anchor="middle" fill="#555">0%</text>
+  <line x1="170" y1="620" x2="700" y2="620" stroke="#e6e6e6"/>
+
+  <g fill="#555" font-size="11" text-anchor="middle">
+    <text x="179" y="638">−55</text>
+    <text x="256" y="638">−20</text>
+    <text x="300" y="638">0</text>
+    <text x="366" y="638">+30</text>
+    <text x="454" y="638">+70</text>
+    <text x="586" y="638">+130</text>
+    <text x="658" y="638">+163</text>
+  </g>
+  <text x="430" y="662" text-anchor="middle" fill="#555">% vs SGLang</text>
+
+  <text x="20" y="86" font-weight="600" fill="#1a1a1a">muse_bf16_proj · attempts</text>
+
+  <text x="268" y="108" text-anchor="end" fill="#1a1a1a">CUTLASS stream-K / WGMMA</text>
+  <circle cx="286" cy="104" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+  <text x="300" y="108" fill="#c0392b">lost</text>
+
+  <text x="268" y="132" text-anchor="end" fill="#1a1a1a">Hand WGMMA + cp.async</text>
+  <circle cx="286" cy="128" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+  <text x="300" y="132" fill="#c0392b">lost</text>
+
+  <text x="268" y="156" text-anchor="end" fill="#1a1a1a">Triton stream-K</text>
+  <circle cx="286" cy="152" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+  <text x="300" y="156" fill="#c0392b">lost</text>
+
+  <text x="268" y="180" text-anchor="end" fill="#1a1a1a">Scalar FP32 router</text>
+  <circle cx="286" cy="176" r="6" fill="none" stroke="#c0392b" stroke-width="2"/>
+  <text x="300" y="180" fill="#c0392b">lost</text>
+
+  <text x="268" y="204" text-anchor="end" fill="#1a1a1a">Router hi/lo BF16</text>
+  <rect x="300" y="192" width="40" height="16" rx="2" fill="#e0a030"/>
+  <text x="348" y="204" fill="#1a1a1a">helped → tip</text>
+
+  <text x="268" y="228" text-anchor="end" fill="#1a1a1a">Piecewise dispatch</text>
+  <rect x="300" y="216" width="40" height="16" rx="2" fill="#3b6ea5"/>
+  <text x="348" y="228" fill="#1a1a1a">kept → tip</text>
+
+  <text x="20" y="256" font-weight="600" fill="#5a5a5a">muse_bf16_proj · tip layers (m=1)</text>
+
+  <text x="268" y="278" text-anchor="end" fill="#1a1a1a">qkv_gate</text>
+  <rect x="300" y="266" width="90.2" height="16" rx="2" fill="#3b6ea5"/>
+  <text x="396" y="278" fill="#1a1a1a">+41%</text>
+
+  <text x="268" y="302" text-anchor="end" fill="#1a1a1a">o</text>
+  <rect x="300" y="290" width="52.8" height="16" rx="2" fill="#3b6ea5"/>
+  <text x="360" y="302" fill="#1a1a1a">+24%</text>
+
+  <text x="268" y="326" text-anchor="end" fill="#1a1a1a">pooler</text>
+  <rect x="300" y="314" width="116.6" height="16" rx="2" fill="#3b6ea5"/>
+  <text x="424" y="326" fill="#1a1a1a">+53%</text>
+
+  <text x="268" y="350" text-anchor="end" fill="#1a1a1a">unpooler</text>
+  <rect x="300" y="338" width="129.8" height="16" rx="2" fill="#3b6ea5"/>
+  <text x="436" y="350" fill="#1a1a1a">+59%</text>
+
+  <text x="268" y="374" text-anchor="end" fill="#1a1a1a">router</text>
+  <rect x="300" y="362" width="358.6" height="16" rx="2" fill="#e0a030"/>
+  <text x="664" y="374" fill="#1a1a1a">+163%</text>
+
+  <text x="268" y="398" text-anchor="end" font-weight="600" fill="#1a1a1a">geo-mean tip</text>
+  <rect x="300" y="386" width="94.6" height="16" rx="2" fill="#1a1a1a"/>
+  <text x="402" y="398" font-weight="600" fill="#1a1a1a">+43%</text>
+
+  <text x="20" y="430" font-weight="600" fill="#1a1a1a">muse_attention_decode</text>
+
+  <text x="268" y="452" text-anchor="end" fill="#1a1a1a">Flash-Decoding splits</text>
+  <rect x="297.8" y="440" width="2.2" height="16" rx="1" fill="#c0392b"/>
+  <text x="308" y="452" fill="#1a1a1a">−1%</text>
+
+  <text x="268" y="476" text-anchor="end" fill="#1a1a1a">page_size=1 flatten</text>
+  <rect x="299" y="464" width="2" height="16" rx="1" fill="#999"/>
+  <text x="308" y="476" fill="#1a1a1a">~0%</text>
+
+  <text x="268" y="500" text-anchor="end" fill="#1a1a1a">Sage-style FP8 Q</text>
+  <rect x="300" y="488" width="6.6" height="16" rx="2" fill="#e0a030"/>
+  <text x="314" y="500" fill="#1a1a1a">+3%</text>
+
+  <text x="268" y="524" text-anchor="end" fill="#1a1a1a">FA3 fused prep / epi</text>
+  <rect x="300" y="512" width="17.6" height="16" rx="2" fill="#3b6ea5"/>
+  <text x="324" y="524" fill="#1a1a1a">+8%</text>
+
+  <text x="168" y="548" text-anchor="end" fill="#1a1a1a">Triton mega-fuse</text>
+  <rect x="179" y="536" width="121" height="16" rx="2" fill="#c0392b"/>
+  <text x="308" y="548" fill="#1a1a1a">−55%</text>
+
+  <text x="268" y="572" text-anchor="end" fill="#1a1a1a">ThunderKittens tiles</text>
+  <rect x="300" y="560" width="22" height="16" rx="2" fill="#3b6ea5"/>
+  <text x="330" y="572" fill="#1a1a1a">+10%</text>
+
+  <text x="268" y="596" text-anchor="end" font-weight="600" fill="#1a1a1a">tip submit</text>
+  <rect x="300" y="584" width="33" height="16" rx="2" fill="#1a1a1a"/>
+  <text x="340" y="596" font-weight="600" fill="#1a1a1a">+15%</text>
+</svg>

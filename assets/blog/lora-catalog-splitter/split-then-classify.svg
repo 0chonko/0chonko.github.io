@@ -21,8 +21,8 @@
   </g>
 
   <rect x="120" y="140" width="240" height="40" fill="#3b6ea5"/>
-  <text x="240" y="157" fill="#ffffff" text-anchor="middle">LoRA splitter (700M, autoregressive)</text>
-  <text x="240" y="172" fill="#ffffff" font-size="10" text-anchor="middle">copies boundaries, never rewrites</text>
+  <text x="240" y="157" fill="#ffffff" text-anchor="middle">LoRA splitter (LiquidAI LFM2-700M)</text>
+  <text x="240" y="172" fill="#ffffff" font-size="10" text-anchor="middle">autoregressive; copies boundaries</text>
 
   <g fill="#e8eef5" stroke="#3b6ea5" stroke-width="1.2">
     <rect x="20" y="246" width="440" height="28"/>

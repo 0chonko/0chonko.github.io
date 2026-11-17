@@ -42,6 +42,9 @@ collections:
   blog:
     output: true
     permalink: /blog/:name/
+  meta:
+    output: true
+    permalink: /meta/:name/
   readinglist:
     output: true
     permalink: /readinglist/:name/
@@ -53,6 +56,12 @@ defaults:
     values:
       layout: default
       section_label: Blog
+  - scope:
+      path: ""
+      type: meta
+    values:
+      layout: default
+      section_label: Meta
   - scope:
       path: ""
       type: readinglist

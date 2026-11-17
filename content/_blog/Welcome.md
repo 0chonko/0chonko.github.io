@@ -10,9 +10,14 @@ My head is usually a mess of half-formed ideas. Writing them down gives them str
 
 ---
 
-## What you will find here (for now)
+## Two lanes
 
-For now the blog is **technical by design**. That is where most of my energy goes, and where I am still building a career path. I want to get closer to the metal and optimize for performance, from edge to ultra-scale. Right now AI labs sit closest to the engineering I like: inference, distributed training, kernel work, fast architecture iteration, memory systems. Expect posts like the ones already here:
+The site has two writing tabs on purpose:
+
+*   **Blog** (this one): technical by design. Concrete setups, measurements, surprises, what I still do not know.
+*   **[Meta](/meta/a-vision-for-malleable-machine-intuition/)**: the thinking lane. Preferences, unfinished questions, philosophy-adjacent notes that do not need a profiler trace.
+
+Most of my energy still goes into Blog. That is where I am building a career path: closer to the metal, performance from edge to ultra-scale. Right now AI labs sit closest to the engineering I like: inference, distributed training, kernel work, fast architecture iteration, memory systems. Expect posts like the ones already here:
 
 *   Performance debugging on HPC systems (UCX, containers, interconnect quirks)
 *   GPU kernels
@@ -27,11 +32,11 @@ I try to write the way I debug: start from a concrete setup, report what surpris
 
 ---
 
-## What might show up later
+## Meta
 
-Technical posts are only half the picture. There is another stack of questions I care about, which my soon-to-be wife is politely less enthusiastic about at dinner: anthropology, psychology, philosophy, the human condition, and the odd thought experiment that has lived rent-free in my head for years. What if humanity managed resources from a global maximum of availability instead of local (state-limited) maxima? What if tech progress were capped and each stage stretched out so people could adapt, giving us a full decade of dedicated mp3/mp4 players, MSN, and messy variety in design? What would that do to monoculture and isomorphism?
+Technical posts are only half the picture. Meta is the other stack: anthropology, psychology, philosophy, the human condition, and the odd thought experiment that has lived rent-free in my head for years. What if humanity managed resources from a global maximum of availability instead of local (state-limited) maxima? What if tech progress were capped and each stage stretched out so people could adapt, giving us a full decade of dedicated mp3/mp4 players, MSN, and messy variety in design? What would that do to monoculture and isomorphism?
 
-I do not know when that second lane opens. For now the blog stays focused, but the scope may widen once the technical backlog feels less urgent.
+That lane is open now. It will stay thinner than Blog for a while, and that is fine.
 
 ---
 

@@ -6,15 +6,20 @@
     <nav class="cornell-cues" id="site-nav" aria-label="Site navigation">
       {% assign nav_resume_open = false %}
       {% assign nav_blog_open = false %}
+      {% assign nav_meta_open = false %}
       {% assign nav_reading_open = false %}
       {% if page.collection == 'blog' %}
         {% assign nav_blog_open = true %}
+      {% elsif page.collection == 'meta' %}
+        {% assign nav_meta_open = true %}
       {% elsif page.collection == 'readinglist' %}
         {% assign nav_reading_open = true %}
       {% else %}
         {% assign nav_resume_open = true %}
       {% endif %}
       {% assign welcome_post = site.blog | where: "title", "Welcome" | first %}
+      {% assign meta_docs = site.meta | default: empty %}
+      {% assign meta_landing = meta_docs | sort: "date" | reverse | first %}
 
       <details class="nav-group" id="nav-resume"{% if nav_resume_open %} open{% endif %}>
         <summary>
@@ -42,6 +47,23 @@
           {% endif %}
         {% endfor %}
         {% for post in dated_posts %}
+          {% if post.title %}
+          <a href="{{ post.url | relative_url }}" class="nav-blog-entry{% if page.url == post.url %} is-active{% endif %}">
+            <span class="nav-entry-title">{{ post.title }}</span>
+            {% if post.date %}
+            <time class="nav-entry-date" datetime="{{ post.date | date: '%Y-%m-%d' }}">{{ post.date | date: "%b %Y" }}</time>
+            {% endif %}
+          </a>
+          {% endif %}
+        {% endfor %}
+      </details>
+      <details class="nav-group" id="nav-meta"{% if nav_meta_open %} open{% endif %}>
+        <summary>
+          <span class="nav-group-chevron" aria-hidden="true"></span>
+          <a href="{{ meta_landing.url | default: '/meta/' | relative_url }}" class="nav-group-link{% if nav_meta_open %} is-active{% endif %}">Meta</a>
+        </summary>
+        {% assign meta_posts = meta_docs | sort: "date" | reverse %}
+        {% for post in meta_posts %}
           {% if post.title %}
           <a href="{{ post.url | relative_url }}" class="nav-blog-entry{% if page.url == post.url %} is-active{% endif %}">
             <span class="nav-entry-title">{{ post.title }}</span>

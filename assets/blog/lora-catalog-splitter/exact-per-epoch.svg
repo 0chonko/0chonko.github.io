@@ -18,13 +18,15 @@
 <text x="510.0" y="378" text-anchor="middle" fill="#555">5</text>
 <text x="285" y="398" text-anchor="middle" fill="#1a1a1a">epoch</text>
 <text x="18" y="205" transform="rotate(-90 18 205)" text-anchor="middle" fill="#1a1a1a">exact / 93</text>
-<polyline points="60.0,339.3 172.5,222.2 285.0,270.4" fill="none" stroke="#b5b5b5" stroke-width="2"/>
-<circle cx="60.0" cy="339.3" r="3" fill="#ffffff" stroke="#b5b5b5" stroke-width="2"/>
-<circle cx="172.5" cy="222.2" r="4.5" fill="#b5b5b5" stroke="#b5b5b5" stroke-width="2"/>
-<circle cx="285.0" cy="270.4" r="3" fill="#ffffff" stroke="#b5b5b5" stroke-width="2"/>
+<polyline points="60.0,298.0 172.5,242.9 285.0,215.3 397.5,229.1 510.0,229.1" fill="none" stroke="#b5b5b5" stroke-width="2"/>
+<circle cx="60.0" cy="298.0" r="3" fill="#ffffff" stroke="#b5b5b5" stroke-width="2"/>
+<circle cx="172.5" cy="242.9" r="3" fill="#ffffff" stroke="#b5b5b5" stroke-width="2"/>
+<circle cx="285.0" cy="215.3" r="4.5" fill="#b5b5b5" stroke="#b5b5b5" stroke-width="2"/>
+<circle cx="397.5" cy="229.1" r="3" fill="#ffffff" stroke="#b5b5b5" stroke-width="2"/>
+<circle cx="510.0" cy="229.1" r="3" fill="#ffffff" stroke="#b5b5b5" stroke-width="2"/>
 <line x1="530" y1="60" x2="554" y2="60" stroke="#b5b5b5" stroke-width="2"/>
 <text x="560" y="64" fill="#1a1a1a">dirty-base</text>
-<text x="560" y="79" fill="#555">r8, 512 ctx, 3 ep</text>
+<text x="560" y="79" fill="#555">r8, 512 ctx, 5 ep</text>
 <polyline points="60.0,208.4 172.5,194.7 285.0,167.1 397.5,187.8 510.0,215.3" fill="none" stroke="#7f8c8d" stroke-width="2"/>
 <circle cx="60.0" cy="208.4" r="3" fill="#ffffff" stroke="#7f8c8d" stroke-width="2"/>
 <circle cx="172.5" cy="194.7" r="3" fill="#ffffff" stroke="#7f8c8d" stroke-width="2"/>
@@ -33,7 +35,7 @@
 <circle cx="510.0" cy="215.3" r="3" fill="#ffffff" stroke="#7f8c8d" stroke-width="2"/>
 <line x1="530" y1="100" x2="554" y2="100" stroke="#7f8c8d" stroke-width="2"/>
 <text x="560" y="104" fill="#1a1a1a">dirty-over</text>
-<text x="560" y="119" fill="#555">5 ep, hard oversample</text>
+<text x="560" y="119" fill="#555">hard oversample</text>
 <polyline points="60.0,194.7 172.5,180.9 285.0,160.2 397.5,187.8 510.0,194.7" fill="none" stroke="#e0a030" stroke-width="2"/>
 <circle cx="60.0" cy="194.7" r="3" fill="#ffffff" stroke="#e0a030" stroke-width="2"/>
 <circle cx="172.5" cy="180.9" r="3" fill="#ffffff" stroke="#e0a030" stroke-width="2"/>
@@ -60,7 +62,7 @@
 <circle cx="510.0" cy="112.0" r="3" fill="#ffffff" stroke="#c0392b" stroke-width="2"/>
 <line x1="530" y1="220" x2="554" y2="220" stroke="#c0392b" stroke-width="2"/>
 <text x="560" y="224" fill="#1a1a1a">clean-1.7b</text>
-<text x="560" y="239" fill="#555">same recipe, 1.7B</text>
+<text x="560" y="239" fill="#555">same recipe, LFM3-1.7B</text>
 <polyline points="60.0,153.3 172.5,139.6 285.0,112.0 397.5,98.2 510.0,105.1" fill="none" stroke="#1f4470" stroke-width="3"/>
 <circle cx="60.0" cy="153.3" r="3" fill="#ffffff" stroke="#1f4470" stroke-width="2"/>
 <circle cx="172.5" cy="139.6" r="3" fill="#ffffff" stroke="#1f4470" stroke-width="2"/>
@@ -69,6 +71,6 @@
 <circle cx="510.0" cy="105.1" r="3" fill="#ffffff" stroke="#1f4470" stroke-width="2"/>
 <line x1="530" y1="260" x2="554" y2="260" stroke="#1f4470" stroke-width="3"/>
 <text x="560" y="264" fill="#1a1a1a">clean-long</text>
-<text x="560" y="279" fill="#555">700M, long catalogs, 4096 ctx</text>
+<text x="560" y="279" fill="#555">LFM2-700M, long catalogs, 4096</text>
 <text x="530" y="312" fill="#555">filled dot = best checkpoint</text>
 </svg>

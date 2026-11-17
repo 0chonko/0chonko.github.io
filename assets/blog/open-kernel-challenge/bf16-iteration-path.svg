@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 290" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Iteration path for the dense BF16 projection board">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#555"/></marker>
+  </defs>
+  <rect width="760" height="290" fill="#ffffff"/>
+  <text x="15" y="28" font-weight="600" fill="#1a1a1a">muse_bf16_proj: iteration path</text>
+  <text x="15" y="48" fill="#5a5a5a">Measure first, then only patch the tax the profile shows.</text>
+
+  <g stroke="#555" stroke-width="1.5" marker-end="url(#a)">
+    <line x1="145" y1="97" x2="163" y2="97"/>
+    <line x1="295" y1="97" x2="313" y2="97"/>
+    <line x1="445" y1="97" x2="463" y2="97"/>
+    <line x1="595" y1="97" x2="613" y2="97"/>
+  </g>
+  <g stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a)">
+    <line x1="230" y1="124" x2="230" y2="178"/>
+    <line x1="380" y1="124" x2="380" y2="178"/>
+  </g>
+
+  <g text-anchor="middle">
+    <rect x="15" y="70" width="130" height="54" rx="8" fill="#f4f4f4" stroke="#999"/>
+    <text x="80" y="92" font-weight="600" fill="#1a1a1a">Roofline</text>
+    <text x="80" y="110" fill="#5a5a5a">8 to 14 µs floor</text>
+
+    <rect x="165" y="70" width="130" height="54" rx="8" fill="#f4f4f4" stroke="#999"/>
+    <text x="230" y="92" font-weight="600" fill="#1a1a1a">Profile baseline</text>
+    <text x="230" y="110" fill="#5a5a5a">GEMV / nvjet</text>
+
+    <rect x="315" y="70" width="130" height="54" rx="8" fill="#eaf1f8" stroke="#3b6ea5"/>
+    <text x="380" y="92" font-weight="600" fill="#1a1a1a">Router hi/lo BF16</text>
+    <text x="380" y="110" fill="#3b6ea5">helped</text>
+
+    <rect x="465" y="70" width="130" height="54" rx="8" fill="#eaf1f8" stroke="#3b6ea5"/>
+    <text x="530" y="92" font-weight="600" fill="#1a1a1a">Piecewise dispatch</text>
+    <text x="530" y="110" fill="#3b6ea5">per-shape path</text>
+
+    <rect x="615" y="70" width="130" height="54" rx="8" fill="#1a1a1a"/>
+    <text x="680" y="92" font-weight="600" fill="#ffffff">Tip</text>
+    <text x="680" y="110" fill="#ffffff">+43% geo-mean</text>
+
+    <rect x="125" y="180" width="210" height="50" rx="8" fill="#fbeceb" stroke="#c0392b" stroke-dasharray="4 3"/>
+    <text x="230" y="200" font-weight="600" fill="#1a1a1a">Rewrite GEMM mainloop</text>
+    <text x="230" y="218" fill="#c0392b">CUTLASS, WGMMA, Triton: lost</text>
+
+    <rect x="355" y="180" width="170" height="50" rx="8" fill="#fbeceb" stroke="#c0392b" stroke-dasharray="4 3"/>
+    <text x="440" y="200" font-weight="600" fill="#1a1a1a">Scalar FP32 router</text>
+    <text x="440" y="218" fill="#c0392b">lost</text>
+  </g>
+
+  <text x="15" y="272" fill="#5a5a5a">Solid: kept on the path. Dashed: tried and abandoned.</text>
+</svg>

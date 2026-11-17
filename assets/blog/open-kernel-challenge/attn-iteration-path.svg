@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" role="img" aria-label="Iteration path for the attention decode board">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#555"/></marker>
+  </defs>
+  <rect width="760" height="340" fill="#ffffff"/>
+  <text x="20" y="28" font-weight="600" fill="#1a1a1a">muse_attention_decode: iteration path (% vs SGLang)</text>
+  <text x="20" y="48" fill="#5a5a5a">Knobs first, then fewer bytes, then fusion around FA3, then tiles.</text>
+
+  <g stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <line x1="180" y1="95" x2="208" y2="95"/>
+    <line x1="370" y1="95" x2="398" y2="95"/>
+    <line x1="560" y1="95" x2="588" y2="95"/>
+    <path d="M670 120 V145 H100 V168"/>
+    <line x1="180" y1="195" x2="208" y2="195"/>
+    <line x1="370" y1="195" x2="398" y2="195"/>
+  </g>
+  <line x1="100" y1="220" x2="100" y2="253" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a)"/>
+
+  <g text-anchor="middle">
+    <rect x="20" y="70" width="160" height="50" rx="8" fill="#f4f4f4" stroke="#999"/>
+    <text x="100" y="90" font-weight="600" fill="#1a1a1a">SGLang FA3 decode</text>
+    <text x="100" y="108" fill="#5a5a5a">0% (reference)</text>
+
+    <rect x="210" y="70" width="160" height="50" rx="8" fill="#f4f4f4" stroke="#999"/>
+    <text x="290" y="90" font-weight="600" fill="#1a1a1a">Tune KV splits</text>
+    <text x="290" y="108" fill="#5a5a5a">−1%</text>
+
+    <rect x="400" y="70" width="160" height="50" rx="8" fill="#f4f4f4" stroke="#999"/>
+    <text x="480" y="90" font-weight="600" fill="#1a1a1a">Flatten pages</text>
+    <text x="480" y="108" fill="#5a5a5a">~0%</text>
+
+    <rect x="590" y="70" width="160" height="50" rx="8" fill="#eaf1f8" stroke="#3b6ea5"/>
+    <text x="670" y="90" font-weight="600" fill="#1a1a1a">FP8 Q (Sage-style)</text>
+    <text x="670" y="108" fill="#3b6ea5">+3%</text>
+
+    <rect x="20" y="170" width="160" height="50" rx="8" fill="#eaf1f8" stroke="#3b6ea5"/>
+    <text x="100" y="190" font-weight="600" fill="#1a1a1a">Fuse prep + epilogue</text>
+    <text x="100" y="208" fill="#3b6ea5">+8%</text>
+
+    <rect x="210" y="170" width="160" height="50" rx="8" fill="#eaf1f8" stroke="#3b6ea5"/>
+    <text x="290" y="190" font-weight="600" fill="#1a1a1a">ThunderKittens tiles</text>
+    <text x="290" y="208" fill="#3b6ea5">+10%</text>
+
+    <rect x="400" y="170" width="160" height="50" rx="8" fill="#1a1a1a"/>
+    <text x="480" y="190" font-weight="600" fill="#ffffff">Tip</text>
+    <text x="480" y="208" fill="#ffffff">+15% (CI +13 to +17)</text>
+
+    <rect x="20" y="255" width="160" height="50" rx="8" fill="#fbeceb" stroke="#c0392b" stroke-dasharray="4 3"/>
+    <text x="100" y="275" font-weight="600" fill="#1a1a1a">Replace attend (Triton)</text>
+    <text x="100" y="293" fill="#c0392b">−55%, dead end</text>
+  </g>
+
+  <g fill="#5a5a5a">
+    <text x="590" y="186">FA3 Cutlass kept:</text>
+    <text x="590" y="204">~95%+ of GPU time</text>
+    <text x="590" y="222">in every positive run.</text>
+  </g>
+
+  <text x="20" y="330" fill="#5a5a5a">Solid: kept on the path. Dashed: tried and abandoned.</text>
+</svg>
