@@ -14,19 +14,19 @@ description: "A course-project retrospective on evolving an EvoMan controller fr
   }
 </style>
 
-In our Evolutionary Computing course project, we trained neural-network controllers to play EvoMan, a game where an agent faces enemies with different attack patterns. We began by evolving a separate specialist for each opponent. For Task II, we asked how far one controller could get against all eight. This retrospective follows the experiments in Group 55’s October 20, 2023 report.
+In our Evolutionary Computing course project, we trained neural-network controllers to play EvoMan, a game where an agent faces enemies with different attack patterns. Each controller encoded 265 weights and biases for a network with 20 sensor inputs, 10 sigmoid hidden units, and five action outputs. We began by evolving a separate specialist for each opponent. For Task II, we asked how far one controller could get against all eight. This retrospective follows the experiments in Group 55’s October 20, 2023 report.
 
 ## From specialists to a diverse population
 
-Our specialist experiments compared two ways to choose who survives each generation. In the comma strategy, `(μ, λ)`, we selected the next generation from the offspring alone. In the plus strategy, `(μ + λ)`, parents competed with offspring for the same places. The plus strategy could carry a strong controller forward unchanged, but if close relatives filled the population, evolution had fewer distinct candidates to build on.
+We used DEAP to evolve the weight vectors. Each generation produced λ offspring and selected μ survivors. One archived plus-strategy configuration used μ = 40, λ = 80, and 100 generations, with two-point crossover and bounded polynomial mutation. In the comma strategy, `(μ, λ)`, we selected the next generation from the offspring alone. In the plus strategy, `(μ + λ)`, parents competed with offspring for the same places. The plus strategy could carry a strong controller forward unchanged, but if close relatives filled the population, evolution had fewer distinct candidates to build on.
 
-We tried fitness sharing to slow that crowding. Controllers with similar genomes shared credit, reducing the selection advantage of clusters of near-duplicates. Across 10 runs in the reported comparison, fitness sharing sustained genetic diversity longer and improved average fitness. Yet genetically different controllers could still behave similarly in the game. A population could therefore stay diverse in its weights while producing similar moves on screen.
+We tried fitness sharing to slow that crowding. We measured Euclidean distance between weight vectors. A neighbor within the sharing radius contributed a penalty that decreased linearly with distance, reducing the selection advantage of clusters of near-duplicates. Across 10 runs in the reported comparison, fitness sharing sustained genetic diversity longer and improved average fitness. Yet genetically different controllers could still behave similarly in the game. A population could therefore stay diverse in its weights while producing similar moves on screen.
 
 ## Training for more than one opponent
 
-We also tried warm initialization, using previously evolved controllers to seed the initial population. This gave evolution a starting point in weights that had already worked in the game. In the report, the warm start improved early fitness.
+We also tried warm initialization, using previously evolved controllers to seed the initial population. The warm-start implementation mixed saved weight vectors with random candidates. In the report, the warm start improved early fitness.
 
-We then trained with multiple enemies. Each tested training set covered six of the eight opponents. Enemies 3, 5, 7, and 8 appeared in both sets. One set added enemies 1 and 2, while the other added 4 and 6. The chart shows which encounters each training set included.
+We then trained with multiple enemies. EvoMan’s multi-enemy fitness used the mean of the per-enemy fitness scores minus their standard deviation, rewarding controllers that performed consistently across encounters. Each tested training set covered six of the eight opponents. Enemies 3, 5, 7, and 8 appeared in both sets. One set added enemies 1 and 2, while the other added 4 and 6. The chart shows which encounters each training set included.
 
 <figure class="evoman-chart">
   <img src="{{ '/assets/blog/evoman-generalist/training-coverage.svg' | relative_url }}" alt="Training coverage. Set A includes enemies 1, 2, 3, 5, 7, and 8. Set B includes enemies 3, 4, 5, 6, 7, and 8." />
