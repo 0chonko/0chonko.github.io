@@ -143,7 +143,7 @@ One line per run in Figure 3, in order (reruns merged).
 | GEMV + dispatch retune | +1% | Moved which shapes take the GEMV. |
 | Custom thin-m kernel | −97% | Scalar BF16 GEMV for `m` = 8 to 32; nowhere near nvjet. |
 | G stack (3 passes) | +3% | Inline GEMV, one-launch CUDA router for `m` ≤ 8 ([`3013eec`](https://github.com/0chonko/open-kernel-challenge/blob/3013eec/muse_bf16_proj/submission.py)), FlashInfer only where it beat nvjet. |
-| H: split-K resume | −3% | One-launch WMMA Stream-K on thin qkv / pooler / unpooler to skip nvjet's split-K reduce ([`f445cc7`](https://github.com/0chonko/open-kernel-challenge/blob/f445cc7/muse_bf16_proj/submission.py), [sketch](https://github.com/0chonko/open-kernel-challenge/blob/main/papers/sketches/stream-k-work-centric-parallel-decomposition-for-dense/gemm_kernel.cu.pp)). |
+| H: split-K resume | −3% | One-launch WMMA Stream-K on thin qkv / pooler / unpooler to skip nvjet's split-K reduce ([`f445cc7`](https://github.com/0chonko/open-kernel-challenge/blob/f445cc7/muse_bf16_proj/submission.py)). |
 | J stack (×2) | +3% | G stack with the ThunderKittens WMMA kernel switched off. |
 | L: scalar FP32 router gate | −17% | Plain FP32 router kernel to skip the cast round-trips. |
 | L: FlashInfer thin-m (×2) | +9% | FlashInfer tensor-core `mm_bf16` for thin `m`, FP32 router gated to `m` ≤ 8. |
@@ -240,7 +240,7 @@ The tip keeps SGLang's FA3 and stacks four edits around it:
    ```
 
    Those edge kernels are real wall time even when FA3 is ~95% of the GPU.
-2. **ThunderKittens 16-row tiles (+10%,** [`024b796`](https://github.com/0chonko/open-kernel-challenge/blob/024b796/muse_attention_decode/submission.py), [sketch](https://github.com/0chonko/open-kernel-challenge/blob/main/papers/sketches/thunderkittens-simple-fast-and-adorable-ai-kernels/gemm_kernel.cu.pp)**).** Once fusion is in, tile shape is the remaining free variable.
+2. **ThunderKittens 16-row tiles (+10%,** [`024b796`](https://github.com/0chonko/open-kernel-challenge/blob/024b796/muse_attention_decode/submission.py)**).** Once fusion is in, tile shape is the remaining free variable.
 3. **DScale path tiles (+10%).** `BLOCK_M` and `num_warps` picked per path, with a larger M on big verify shapes.
 4. **Fold the gate copy into the epilogue (+15%).** On short-Q verify shapes FA returns non-row-major views, and the elementwise copy after it cost ~2 to 3 µs, a whole launch. Folding it into the Triton epilogue removes it.
 
@@ -321,7 +321,7 @@ Each mark is one `(layer, load)` case from one judge run; color is that case's c
 Challenge and code:
 
 * Paradigm / Meta / Andromeda, [Muse Spark Open Kernel Challenge](https://openkernelchallenge.dev); [announcement](https://www.paradigm.xyz/writing/muse-spark-open-kernel-challenge).
-* Meta repo notes: [`papers/`](https://github.com/0chonko/open-kernel-challenge/tree/main/papers) ([`index.txt`](https://github.com/0chonko/open-kernel-challenge/blob/main/papers/index.txt), [`extractions/`](https://github.com/0chonko/open-kernel-challenge/tree/main/papers/extractions), [`sketches/`](https://github.com/0chonko/open-kernel-challenge/tree/main/papers/sketches)).
+* [Repository reading list](https://github.com/0chonko/open-kernel-challenge/blob/main/papers/index.txt).
 * SGLang baselines: [`muse_bf16_proj/baseline.py`](https://github.com/0chonko/open-kernel-challenge/blob/main/muse_bf16_proj/baseline.py), [`muse_attention_decode/baseline.py`](https://github.com/0chonko/open-kernel-challenge/blob/main/muse_attention_decode/baseline.py).
 * Tip submits: [`muse_bf16_proj/submission.py`](https://github.com/0chonko/open-kernel-challenge/blob/main/muse_bf16_proj/submission.py); attention FA3-fuse tip [`@ 2d001cc`](https://github.com/0chonko/open-kernel-challenge/blob/2d001cc/muse_attention_decode/submission.py).
 
@@ -331,8 +331,8 @@ Papers used for these two boards (tracked under [`papers/`](https://github.com/0
 * *Flash-Decoding* (Hong / Dao, 2023).
 * [*SageAttention3*](https://arxiv.org/abs/2505.11594) (2025).
 * [*PagedAttention*](https://arxiv.org/abs/2309.06180) (SOSP 2023).
-* [*ThunderKittens*](https://arxiv.org/abs/2410.20399) (ICLR 2025); [local sketch](https://github.com/0chonko/open-kernel-challenge/tree/main/papers/sketches/thunderkittens-simple-fast-and-adorable-ai-kernels).
-* [*Stream-K*](https://arxiv.org/abs/2301.03598) (PPoPP 2023); [local sketch](https://github.com/0chonko/open-kernel-challenge/tree/main/papers/sketches/stream-k-work-centric-parallel-decomposition-for-dense).
+* [*ThunderKittens*](https://arxiv.org/abs/2410.20399) (ICLR 2025).
+* [*Stream-K*](https://arxiv.org/abs/2301.03598) (PPoPP 2023).
 * [*FlashInfer*](https://arxiv.org/abs/2501.01005) (MLSys 2025).
 * [*QServe*](https://arxiv.org/abs/2405.04532) (MLSys 2025).
 * [*Ladder*](https://arxiv.org/abs/2312.10688) (OSDI 2024).
