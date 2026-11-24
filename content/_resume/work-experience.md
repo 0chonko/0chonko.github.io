@@ -33,7 +33,7 @@ order: 2
 
 <div class="entry" markdown="1">
 
-### Part-time Fullstack Developer — Frismedia
+### Software Engineer — Frismedia
 <p class="meta">Feb 2022 – Dec 2024 · Utrecht, NL</p>
 
 - Developed fullstack web and mobile applications (React Native) with a focus on scalable architecture and performance optimization.
