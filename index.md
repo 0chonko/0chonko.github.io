@@ -1,5 +1,5 @@
 ---
 layout: home
-title: German Savchenko
+title: G.S.
 section_label: Résumé
 ---

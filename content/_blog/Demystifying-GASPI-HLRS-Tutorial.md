@@ -1,7 +1,7 @@
 ---
 title: "Demystifying GASPI: Notes from a 2-Day HLRS Tutorial " 
 date: 2026-06-19
-description: "What I took away from HLRS's GASPI course on PGAS programming, one-sided RDMA, and why global barriers might be the wrong abstraction at scale. [Certificate](/assets/blog/demystifying-gaspi-hlrs-tutorial/personal-certificate.pdf)"
+description: "What I took away from HLRS's GASPI course on PGAS programming, one-sided RDMA, and why global barriers might be the wrong abstraction at scale."
 ---
 
 Most of my HPC work so far lives in the **MPI** world: OpenMPI, UCX transport selection, checking that a containerized job really uses InfiniBand and not TCP.
@@ -135,6 +135,6 @@ Keep MPI for coarse structure and I/O. Use GASPI in the hot loop where overlap m
 
 ### References
 
-* Fraunhofer ITWM / HLRS, *GASPI Tutorial* (2-day online course, 2026). [Certificate](/assets/blog/demystifying-gaspi-hlrs-tutorial/personal-certificate.pdf).
+* Fraunhofer ITWM / HLRS, *GASPI Tutorial* (2-day online course, 2026).
 * GASPI Consortium, [GASPI Standard and Documentation](https://www.gaspi.de/).
 * Full list: [All references](/readinglist/).

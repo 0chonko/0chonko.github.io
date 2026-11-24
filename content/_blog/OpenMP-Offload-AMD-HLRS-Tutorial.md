@@ -1,7 +1,7 @@
 ---
 title: "OpenMP Offload on AMD GPUs: Notes from an HLRS Tutorial"
 date: 2025-10-22
-description: "What I took away from HLRS's two-day course on OpenMP target offload, unified shared memory on MI300A, discrete-GPU data environments, and ROCm profiling. [Certificate](/assets/blog/openmp-offload-hlrs-tutorial/personal-certificate.pdf)"
+description: "What I took away from HLRS's two-day course on OpenMP target offload, unified shared memory on MI300A, discrete-GPU data environments, and ROCm profiling."
 ---
 
 Most of my GPU work has been CUDA: kernels, NVLink bandwidth, power profiling on A100 and H100 nodes. CPU OpenMP I know from cache-line tuning in a SystemC simulator and from MPI+OpenMP hybrid jobs on Snellius. **OpenMP target offload** on AMD was a gap, and it kept coming up next to portability and Fortran weather codes.
@@ -261,7 +261,7 @@ What I have not checked myself: whether a production weather kernel ported with 
 
 ### References
 
-* HLRS / AMD, *Introduction to OpenMP Offloading with AMD GPUs* (2-day online course, Oct 21 to 22, 2025). [Course materials](https://fs.hlrs.de/projects/par/events/2025/GPU-OPENMP-AMD/). [Certificate](/assets/blog/openmp-offload-hlrs-tutorial/personal-certificate.pdf).
+* HLRS / AMD, *Introduction to OpenMP Offloading with AMD GPUs* (2-day online course, Oct 21 to 22, 2025). [Course materials](https://fs.hlrs.de/projects/par/events/2025/GPU-OPENMP-AMD/).
 * AMD, [HPCTrainingExamples](https://github.com/AMD/HPCTrainingExamples) (OpenMP C/Fortran exercises, Rocprofv3 OpenMP labs).
 * AMD ROCm, [OpenMP support and USM](https://rocm.docs.amd.com/projects/llvm-project/en/latest/conceptual/openmp.html).
 * AMD ROCm, [Using rocprofv3 with OpenMP](https://rocm.docs.amd.com/projects/rocprofiler-sdk/en/latest/how-to/using-rocprofv3-with-openmp.html).

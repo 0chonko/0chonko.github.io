@@ -5,13 +5,11 @@ plugins:
   - jekyll-seo-tag
   - jekyll-github-metadata
 
-title: German Savchenko
+title: G.S.
 description: M.Sc. · Software Engineer
 lang: en
 
-email: german.savchenko@gmail.com
 location: Würzburg, DE
-linkedin: https://linkedin.com/in/german-savchenko-9aa363138/
 github_username: 0chonko
 
 show_downloads: false

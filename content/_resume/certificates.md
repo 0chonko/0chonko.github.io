@@ -8,9 +8,9 @@ order: 3
 <div class="table-wrap">
 <table>
 <tbody>
-<tr><td>Finding and Fixing Bugs in Parallel and GPU Applications (HLRS)</td><td><em>Oct 2026 · <a href="/assets/blog/finding-fixing-bugs-hlrs-tutorial/personal-certificate.pdf">certificate</a></em></td></tr>
-<tr><td>GASPI Tutorial (Fraunhofer ITWM / HLRS)</td><td><em>Jun 2026 · <a href="/assets/blog/demystifying-gaspi-hlrs-tutorial/personal-certificate.pdf">certificate</a></em></td></tr>
-<tr><td>Introduction to OpenMP Offloading with AMD GPUs (HLRS / AMD)</td><td><em>Oct 2025 · <a href="/assets/blog/openmp-offload-hlrs-tutorial/personal-certificate.pdf">certificate</a></em></td></tr>
+<tr><td>Finding and Fixing Bugs in Parallel and GPU Applications (HLRS)</td><td><em>Oct 2026</em></td></tr>
+<tr><td>GASPI Tutorial (Fraunhofer ITWM / HLRS)</td><td><em>Jun 2026</em></td></tr>
+<tr><td>Introduction to OpenMP Offloading with AMD GPUs (HLRS / AMD)</td><td><em>Oct 2025</em></td></tr>
 <tr><td>AI Engineer for Data Scientists Associate (DataCamp)</td><td><em>AEDSO0126 · expires Feb 2027</em></td></tr>
 <tr><td>Deep Learning for Text with PyTorch (DataCamp)</td><td><em>2b5564d1145972b16ec05ce979e21e6db54e3</em></td></tr>
 <tr><td>Distributed AI Model Training in Python (DataCamp)</td><td><em>39978341b242cbe2de8926250e58e63d51e6d817</em></td></tr>

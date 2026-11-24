@@ -4,7 +4,7 @@ date: 2021-08-01
 description: "How a bachelor thesis tool turned noisy satellite change-detection tiles into web-ready polygons, and what that taught me about data shape before visualization."
 ---
 
-For my bachelor project at the **University of Twente** (Creative Technology, 2021), I worked with **RISE** in Cyprus. Their **Siamese neural networks** compare pairs of Planet satellite images and output **change detection (CD) maps**: 256×256 binary masks covering the area between **Nicosia** and **Larnaca**.
+For my bachelor project I worked with **RISE** in Cyprus. Their **Siamese neural networks** compare pairs of Planet satellite images and output **change detection (CD) maps**: 256×256 binary masks covering the area between **Nicosia** and **Larnaca**.
 
 I did not build the model. My job was the middle layer: turn the masks into something policymakers could explore on the web, then relate change patterns to demographic data (Copernicus CORINE, Michael Bauer Research) in **ArcGIS**.
 
@@ -80,7 +80,6 @@ Today I would do the contour and hull steps in GDAL or a geospatial notebook and
 
 ### References
 
-* G. Savchenko, *Visualizing Land Use Change* (B.Sc. thesis, University of Twente, July 2021). [PDF](/Land_Use_Change_analysis_tool/Bachelor-thesis.pdf)
 * Kalita et al., *Land Use Change Detection Using Deep Siamese Neural Networks and Weakly Supervised Learning* (CAIP 2021). [PDF](https://superworld.cyens.org.cy/papers/land_change_CAIP21.pdf)
 * Tool source: [`Land_Use_Change_analysis_tool`](https://github.com/0chonko/Land_Use_Change_analysis_tool)
 * Full list: [All references](/readinglist/).
