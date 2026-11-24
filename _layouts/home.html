@@ -3,6 +3,14 @@ layout: default
 section_label: Résumé
 ---
 <p class="mobile-desktop-note">Tap <strong>›</strong> on the left edge to open the sidebar (blog, resume, reading list). Or switch to desktop mode for the full layout.</p>
+<section id="selected-projects" class="resume-section">
+  <h2>Selected Projects</h2>
+  <ul>
+    <li><a href="{{ '/blog/from-manuscript-transcriptions-to-json-a-configurable-extraction-pipeline/' | relative_url }}">Manuscript metadata pipeline</a> — I built a configurable extraction pipeline with schema validation and gold-set evaluation, then benchmarked self-hosted inference against hosted APIs at the University of Würzburg.</li>
+    <li><a href="https://github.com/0chonko/phpunit-plugin">PHPUnit CI plugin</a> — A Docker-packaged Drone plugin for running tests and collecting reports.</li>
+    <li><a href="https://github.com/0chonko/HPC-net-bench">GPU communication benchmarks</a> — A100/H100 measurements with an asynchronous power sampler.</li>
+  </ul>
+</section>
 {% assign sections = site.resume | sort: "order" %}
 {% for section in sections %}
 <section id="{{ section.slug }}" class="resume-section">
