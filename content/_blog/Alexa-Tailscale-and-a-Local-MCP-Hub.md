@@ -54,7 +54,7 @@ Lambda takes the utterance, POSTs it to the hook, and returns speech. The hook m
 
 ```bash
 agent --resume <chatId> -p --trust --approve-mcps --force \
-  --workspace ~/Documents/alexa-tailscale-container \
+  --workspace ~/Documents/alexa-tailscale-bridge \
   --model composer-2.5-fast --output-format text "<voice prompt>"
 ```
 
@@ -81,4 +81,4 @@ The Alexa session and the agent chat live separately. **Stop** ends only the Ale
 4. **Use one free-text intent**; let the agent pick tools.
 5. **Plan for the ~8 s skill timeout** from day one (background job + "result" poll).
 
-Deploy details (ECR push, Lambda image, skill slots) are in the `alexa-tailscale-container` repo and in `personal://alexa`.
+Deploy details (ECR push, Lambda image, skill slots) are in the [Alexa–Tailscale Bridge repository](https://github.com/0chonko/alexa-tailscale-bridge) and in `personal://alexa`.

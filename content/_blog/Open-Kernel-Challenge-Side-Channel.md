@@ -68,7 +68,7 @@ class Config(TypedDict):
 
 Floor = `max(bytes / 4.8 TB/s, flops / 989 TFLOP/s)`. Intensity is FLOPs (`2·m·n·k`) over bytes moved, which is roughly `m` because the weight dominates the traffic. The router is FP32, so its weight costs twice the bytes per FLOP.
 
-The judge's table ([`muse_bf16_proj/TASK.md`](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/muse_bf16_proj/TASK.md)) maps loads to `m`: decode 1 / 16 / 32 uses `m` = 1 / 16 / 32, and verify 1 / 16 / 32 uses `m` = 8 / 128 / 256. Each layer runs **62** times per step. Unpooler at `m` ≤ 8 uses this GPU's `n = 1024` slice (1.7 µs floor); larger `m` reads the full 8192-wide weight.
+The judge's table ([`muse_bf16_proj/TASK.md`](https://github.com/0chonko/open-kernel-challenge/blob/main/muse_bf16_proj/TASK.md)) maps loads to `m`: decode 1 / 16 / 32 uses `m` = 1 / 16 / 32, and verify 1 / 16 / 32 uses `m` = 8 / 128 / 256. Each layer runs **62** times per step. Unpooler at `m` ≤ 8 uses this GPU's `n = 1024` slice (1.7 µs floor); larger `m` reads the full 8192-wide weight.
 
 **Scoring.** A load's time is the sum of its layers' times, each times its weight. Speedup is the geo-mean over loads, so each load counts equally. Timing replays CUDA graphs with a cold L2, against SGLang in paired runs. Correctness is relative L2 at most 1% against FP64, and 0.01% for the router. The router needs a BF16 hi + lo split with FP32 accumulation above 8 tokens. About one row in eight is a single power-of-two entry and must be within 0.1%.
 
@@ -97,14 +97,14 @@ Board score is still `out = x @ W.T` for thin `m`. I sent 34 judge runs at this 
 
 ### Tip (+43%)
 
-Code: [`submission.py` @ a132ea6](https://github.com/0chonko/open-kernel-challenge-meta/blob/a132ea6/muse_bf16_proj/submission.py) (assembled stack), [`main`](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/muse_bf16_proj/submission.py).
+Code: [`submission.py` @ a132ea6](https://github.com/0chonko/open-kernel-challenge/blob/a132ea6/muse_bf16_proj/submission.py) (assembled stack), [`main`](https://github.com/0chonko/open-kernel-challenge/blob/main/muse_bf16_proj/submission.py).
 
 Keep the library path wherever it already sits on the floor and use custom kernels only where the profile shows leftover tax. Each piece first ran alone on top of the SGLang baseline, then went onto the stack one at a time:
 
 | Piece | Alone | Stacked |
 | :--- | ---: | ---: |
 | Small-`m` GEMV, 12-bit lossless + BF16 twin, `m` ≤ 32 | +27% | +26% |
-| `m=32` WGMMA / TMA GEMV ([`53f3a0a`](https://github.com/0chonko/open-kernel-challenge-meta/blob/53f3a0a/muse_bf16_proj/submission.py)) | +1% | +27% |
+| `m=32` WGMMA / TMA GEMV ([`53f3a0a`](https://github.com/0chonko/open-kernel-challenge/blob/53f3a0a/muse_bf16_proj/submission.py)) | +1% | +27% |
 | Router hi/lo BF16 on WGMMA | +17% | +40% |
 | qkv tiles | +0% | +39% |
 | wide2 + `o` layer | +4% | +42% |
@@ -142,12 +142,12 @@ One line per run in Figure 3, in order (reruns merged).
 | Inline SGLang Hopper GEMV | +2% | `load_inline` SGLang's `hopper_bf16_gemv` for `m=1`. |
 | GEMV + dispatch retune | +1% | Moved which shapes take the GEMV. |
 | Custom thin-m kernel | −97% | Scalar BF16 GEMV for `m` = 8 to 32; nowhere near nvjet. |
-| G stack (3 passes) | +3% | Inline GEMV, one-launch CUDA router for `m` ≤ 8 ([`3013eec`](https://github.com/0chonko/open-kernel-challenge-meta/blob/3013eec/muse_bf16_proj/submission.py)), FlashInfer only where it beat nvjet. |
-| H: split-K resume | −3% | One-launch WMMA Stream-K on thin qkv / pooler / unpooler to skip nvjet's split-K reduce ([`f445cc7`](https://github.com/0chonko/open-kernel-challenge-meta/blob/f445cc7/muse_bf16_proj/submission.py), [sketch](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/papers/sketches/stream-k-work-centric-parallel-decomposition-for-dense/gemm_kernel.cu.pp)). |
+| G stack (3 passes) | +3% | Inline GEMV, one-launch CUDA router for `m` ≤ 8 ([`3013eec`](https://github.com/0chonko/open-kernel-challenge/blob/3013eec/muse_bf16_proj/submission.py)), FlashInfer only where it beat nvjet. |
+| H: split-K resume | −3% | One-launch WMMA Stream-K on thin qkv / pooler / unpooler to skip nvjet's split-K reduce ([`f445cc7`](https://github.com/0chonko/open-kernel-challenge/blob/f445cc7/muse_bf16_proj/submission.py), [sketch](https://github.com/0chonko/open-kernel-challenge/blob/main/papers/sketches/stream-k-work-centric-parallel-decomposition-for-dense/gemm_kernel.cu.pp)). |
 | J stack (×2) | +3% | G stack with the ThunderKittens WMMA kernel switched off. |
 | L: scalar FP32 router gate | −17% | Plain FP32 router kernel to skip the cast round-trips. |
 | L: FlashInfer thin-m (×2) | +9% | FlashInfer tensor-core `mm_bf16` for thin `m`, FP32 router gated to `m` ≤ 8. |
-| L: hi/lo router + FlashInfer | +9% | First hi/lo BF16 router above 8 tokens ([`d60f62b`](https://github.com/0chonko/open-kernel-challenge-meta/blob/d60f62b/muse_bf16_proj/submission.py)). |
+| L: hi/lo router + FlashInfer | +9% | First hi/lo BF16 router above 8 tokens ([`d60f62b`](https://github.com/0chonko/open-kernel-challenge/blob/d60f62b/muse_bf16_proj/submission.py)). |
 | L: WGMMA-wide Stream-K | +1% | Router split across 256 CTAs, WGMMA `m64n128k16` at `m=256`. |
 | L: router to m=16 | +9% | FP32 router path extended to `m=16`. |
 | M: SM90 GEMM for wide m, retile | +5%, −12% | CUTLASS SM90 GEMM on the verify shapes; the retile lost. |
@@ -206,7 +206,7 @@ Output is `bfloat16 [B, L, Hq·64]`. Scored loads are `decode {1, 16, 32}` and `
 | sliding (2,048 window, RoPE) | 46 | 0.1 µs | 1.6 µs | 3.3 µs |
 | full (~80K context, no RoPE) | 16 | 4.3 µs | 63.2 µs | 126.4 µs |
 
-Floors are from the judge's table in [`muse_attention_decode/TASK.md`](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/muse_attention_decode/TASK.md). Intensity on unique KV is about **16 FLOP/byte** (`4·Hq / (2·Hkv)`), well below the ridge near 200, so the board is memory-bound at SOL. Verify reuses the same KV across 8 queries in the floor bound, so its intensity is higher than decode, but measured traffic on large full shapes still lands around **3×** the unique-KV bytes (cold L2, page gather, head reuse shortfall, epilogue).
+Floors are from the judge's table in [`muse_attention_decode/TASK.md`](https://github.com/0chonko/open-kernel-challenge/blob/main/muse_attention_decode/TASK.md). Intensity on unique KV is about **16 FLOP/byte** (`4·Hq / (2·Hkv)`), well below the ridge near 200, so the board is memory-bound at SOL. Verify reuses the same KV across 8 queries in the floor bound, so its intensity is higher than decode, but measured traffic on large full shapes still lands around **3×** the unique-KV bytes (cold L2, page gather, head reuse shortfall, epilogue).
 
 **Scoring and rules.** Same geo-mean over loads as the projections. Each load is one `(mode, B)` with **sliding × 46 + full × 16**, so sliding tax moves the score more than shaving another percent off a huge full FA. Correctness is relative L2 against an FP32 reference, within 2.5× the FP8-query reference error plus 1.5%, clamped to 3 to 15%. New cache entries must match within 8%. The 16 pre-timing tests include data-parallel heads, a 1M-token context, page size 64, and KV scales of 1/64. Every key must be attended: no top-k, sparse, or block-skipping attention. Queries may be rounded to FP8 E4M3, as FA3 does, but the KV cache stays FP8.
 
@@ -216,7 +216,7 @@ Floors are from the judge's table in [`muse_attention_decode/TASK.md`](https://g
 FusedQKNorm → store_cache → q.to(fp8) → [prepare_varlen?] → FA3 → [Combine?] → rms_norm_gate
 ```
 
-Constants on scored shapes: `Hq=16`, `Hkv=2`, `D=64`, GQA=8, `page_size=1`, `kv_scale=1`, `sm_scale=1/8`, `qk_scale_factor=5.473` (FA softmax scale `5.473/8`), RoPE θ=`5e5` on sliding only. Specs and floors: [meta repo](https://github.com/0chonko/open-kernel-challenge-meta).
+Constants on scored shapes: `Hq=16`, `Hkv=2`, `D=64`, GQA=8, `page_size=1`, `kv_scale=1`, `sm_scale=1/8`, `qk_scale_factor=5.473` (FA softmax scale `5.473/8`), RoPE θ=`5e5` on sliding only. Specs and floors: [meta repo](https://github.com/0chonko/open-kernel-challenge).
 
 ### Iteration path
 
@@ -226,11 +226,11 @@ FA3 stays the attend kernel unless noted. I sent 16 judge runs here (Figure 6), 
 
 ### Tip (+15%)
 
-Code: [`submission.py` @ 2d001cc](https://github.com/0chonko/open-kernel-challenge-meta/blob/2d001cc/muse_attention_decode/submission.py) (FA3 fuse tip; `main` later moved to a full gated CUDA path).
+Code: [`submission.py` @ 2d001cc](https://github.com/0chonko/open-kernel-challenge/blob/2d001cc/muse_attention_decode/submission.py) (FA3 fuse tip; `main` later moved to a full gated CUDA path).
 
 The tip keeps SGLang's FA3 and stacks four edits around it:
 
-1. **Fused prep and epilogue (+8%,** [`cdcd1a9`](https://github.com/0chonko/open-kernel-challenge-meta/blob/cdcd1a9/muse_attention_decode/submission.py)**).** Collapse the launches around attend into one prep and one epilogue:
+1. **Fused prep and epilogue (+8%,** [`cdcd1a9`](https://github.com/0chonko/open-kernel-challenge/blob/cdcd1a9/muse_attention_decode/submission.py)**).** Collapse the launches around attend into one prep and one epilogue:
 
    ```text
    # was: rmsnorm(Q) → rope(Q) → cast_fp8(Q) → FA3 → rmsnorm(O) * gate
@@ -240,7 +240,7 @@ The tip keeps SGLang's FA3 and stacks four edits around it:
    ```
 
    Those edge kernels are real wall time even when FA3 is ~95% of the GPU.
-2. **ThunderKittens 16-row tiles (+10%,** [`024b796`](https://github.com/0chonko/open-kernel-challenge-meta/blob/024b796/muse_attention_decode/submission.py), [sketch](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/papers/sketches/thunderkittens-simple-fast-and-adorable-ai-kernels/gemm_kernel.cu.pp)**).** Once fusion is in, tile shape is the remaining free variable.
+2. **ThunderKittens 16-row tiles (+10%,** [`024b796`](https://github.com/0chonko/open-kernel-challenge/blob/024b796/muse_attention_decode/submission.py), [sketch](https://github.com/0chonko/open-kernel-challenge/blob/main/papers/sketches/thunderkittens-simple-fast-and-adorable-ai-kernels/gemm_kernel.cu.pp)**).** Once fusion is in, tile shape is the remaining free variable.
 3. **DScale path tiles (+10%).** `BLOCK_M` and `num_warps` picked per path, with a larger M on big verify shapes.
 4. **Fold the gate copy into the epilogue (+15%).** On short-Q verify shapes FA returns non-row-major views, and the elementwise copy after it cost ~2 to 3 µs, a whole launch. Folding it into the Triton epilogue removes it.
 
@@ -268,7 +268,7 @@ One line per run in Figure 6 that isn't a tip step, in order.
 
 | Run | vs SGLang | What it tried |
 | :--- | ---: | :--- |
-| Custom Triton attend | −99.8% | Own Triton attend kernel in place of FA3 ([`60f6ec6`](https://github.com/0chonko/open-kernel-challenge-meta/blob/60f6ec6/muse_attention_decode/submission.py)). |
+| Custom Triton attend | −99.8% | Own Triton attend kernel in place of FA3 ([`60f6ec6`](https://github.com/0chonko/open-kernel-challenge/blob/60f6ec6/muse_attention_decode/submission.py)). |
 | FlashInfer verify layout | +0% | Dense `[B, L, Hq, D]` Q on verify, no KV split on sliding verify; sliding verify FA got ~2× slower. |
 | FA4-style pipeline | −8% | Fused prep producer, `num_splits=1` on sliding, software-pipelined epilogue for verify. |
 | SageAttention3 FP8 Q | −21% | Microscaled FP8 Q (the judge allows E4M3, not FP4); correct but slower. |
@@ -281,7 +281,7 @@ One line per run in Figure 6 that isn't a tip step, in order.
 | Strided epilogue loads | −4% | Epilogue reads FA's strided output directly instead of copying it first. |
 | Single-pass full-context GQA | −80% | Custom kernel reading each KV byte once for all 8 query heads that share it. |
 
-Three early probes aren't on the chart: a Flash-Decoding `num_splits` retune (−1%, [`ef3a9dc`](https://github.com/0chonko/open-kernel-challenge-meta/blob/ef3a9dc/muse_attention_decode/submission.py)), a `page_size=1` KV flatten (~0%, [`bed4af3`](https://github.com/0chonko/open-kernel-challenge-meta/blob/bed4af3/muse_attention_decode/submission.py)), and a Sage-style FP8 Q cast fused into QK-norm (+3%, [`9558aea`](https://github.com/0chonko/open-kernel-challenge-meta/blob/9558aea/muse_attention_decode/submission.py)). Same pattern as the projections, honestly: every run that replaced the attend mainloop lost, some by orders of magnitude, and everything that only touched the edges landed within a few percent of each other.
+Three early probes aren't on the chart: a Flash-Decoding `num_splits` retune (−1%, [`ef3a9dc`](https://github.com/0chonko/open-kernel-challenge/blob/ef3a9dc/muse_attention_decode/submission.py)), a `page_size=1` KV flatten (~0%, [`bed4af3`](https://github.com/0chonko/open-kernel-challenge/blob/bed4af3/muse_attention_decode/submission.py)), and a Sage-style FP8 Q cast fused into QK-norm (+3%, [`9558aea`](https://github.com/0chonko/open-kernel-challenge/blob/9558aea/muse_attention_decode/submission.py)). Same pattern as the projections, honestly: every run that replaced the attend mainloop lost, some by orders of magnitude, and everything that only touched the edges landed within a few percent of each other.
 
 **Next.** Keep FA3; wire the fused prep/epilogue into the full decode-layer board.
 
@@ -321,18 +321,18 @@ Each mark is one `(layer, load)` case from one judge run; color is that case's c
 Challenge and code:
 
 * Paradigm / Meta / Andromeda, [Muse Spark Open Kernel Challenge](https://openkernelchallenge.dev); [announcement](https://www.paradigm.xyz/writing/muse-spark-open-kernel-challenge).
-* Meta repo notes: [`papers/`](https://github.com/0chonko/open-kernel-challenge-meta/tree/main/papers) ([`index.txt`](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/papers/index.txt), [`extractions/`](https://github.com/0chonko/open-kernel-challenge-meta/tree/main/papers/extractions), [`sketches/`](https://github.com/0chonko/open-kernel-challenge-meta/tree/main/papers/sketches)).
-* SGLang baselines: [`muse_bf16_proj/baseline.py`](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/muse_bf16_proj/baseline.py), [`muse_attention_decode/baseline.py`](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/muse_attention_decode/baseline.py).
-* Tip submits: [`muse_bf16_proj/submission.py`](https://github.com/0chonko/open-kernel-challenge-meta/blob/main/muse_bf16_proj/submission.py); attention FA3-fuse tip [`@ 2d001cc`](https://github.com/0chonko/open-kernel-challenge-meta/blob/2d001cc/muse_attention_decode/submission.py).
+* Meta repo notes: [`papers/`](https://github.com/0chonko/open-kernel-challenge/tree/main/papers) ([`index.txt`](https://github.com/0chonko/open-kernel-challenge/blob/main/papers/index.txt), [`extractions/`](https://github.com/0chonko/open-kernel-challenge/tree/main/papers/extractions), [`sketches/`](https://github.com/0chonko/open-kernel-challenge/tree/main/papers/sketches)).
+* SGLang baselines: [`muse_bf16_proj/baseline.py`](https://github.com/0chonko/open-kernel-challenge/blob/main/muse_bf16_proj/baseline.py), [`muse_attention_decode/baseline.py`](https://github.com/0chonko/open-kernel-challenge/blob/main/muse_attention_decode/baseline.py).
+* Tip submits: [`muse_bf16_proj/submission.py`](https://github.com/0chonko/open-kernel-challenge/blob/main/muse_bf16_proj/submission.py); attention FA3-fuse tip [`@ 2d001cc`](https://github.com/0chonko/open-kernel-challenge/blob/2d001cc/muse_attention_decode/submission.py).
 
-Papers used for these two boards (tracked under [`papers/`](https://github.com/0chonko/open-kernel-challenge-meta/tree/main/papers)):
+Papers used for these two boards (tracked under [`papers/`](https://github.com/0chonko/open-kernel-challenge/tree/main/papers)):
 
 * [*FlashAttention-3*](https://arxiv.org/abs/2407.08608) (2024); [*FlashAttention-2*](https://arxiv.org/abs/2307.08691) (2024); [*FlashAttention-4*](https://arxiv.org/abs/2603.05451) (2026).
 * *Flash-Decoding* (Hong / Dao, 2023).
 * [*SageAttention3*](https://arxiv.org/abs/2505.11594) (2025).
 * [*PagedAttention*](https://arxiv.org/abs/2309.06180) (SOSP 2023).
-* [*ThunderKittens*](https://arxiv.org/abs/2410.20399) (ICLR 2025); [local sketch](https://github.com/0chonko/open-kernel-challenge-meta/tree/main/papers/sketches/thunderkittens-simple-fast-and-adorable-ai-kernels).
-* [*Stream-K*](https://arxiv.org/abs/2301.03598) (PPoPP 2023); [local sketch](https://github.com/0chonko/open-kernel-challenge-meta/tree/main/papers/sketches/stream-k-work-centric-parallel-decomposition-for-dense).
+* [*ThunderKittens*](https://arxiv.org/abs/2410.20399) (ICLR 2025); [local sketch](https://github.com/0chonko/open-kernel-challenge/tree/main/papers/sketches/thunderkittens-simple-fast-and-adorable-ai-kernels).
+* [*Stream-K*](https://arxiv.org/abs/2301.03598) (PPoPP 2023); [local sketch](https://github.com/0chonko/open-kernel-challenge/tree/main/papers/sketches/stream-k-work-centric-parallel-decomposition-for-dense).
 * [*FlashInfer*](https://arxiv.org/abs/2501.01005) (MLSys 2025).
 * [*QServe*](https://arxiv.org/abs/2405.04532) (MLSys 2025).
 * [*Ladder*](https://arxiv.org/abs/2312.10688) (OSDI 2024).
