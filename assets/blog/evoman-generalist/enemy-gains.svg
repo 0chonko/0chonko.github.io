@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="314" viewBox="0 0 360 314">
+  <title>Gain against each enemy</title>
+  <rect width="360" height="314" rx="12" fill="#f4f7f9"/>
+  <g font-family="system-ui, sans-serif" fill="#182b3b" font-size="16">
+    <text x="16" y="29" font-weight="700">Gain against each enemy</text>
+    <text x="16" y="52" font-size="14">Enemy</text>
+    <path d="M115 57V301 M273 57V301" stroke="#cbd5df" stroke-dasharray="3 4"/>
+    <path d="M194 57V301" stroke="#42566a" stroke-width="1.5"/>
+    <g font-size="14" text-anchor="middle">
+      <text x="115" y="52">−50</text>
+      <text x="194" y="52" font-weight="700">0</text>
+      <text x="273" y="52">+50</text>
+    </g>
+    <text x="16" y="78">1</text>
+    <rect x="51.8" y="64" width="142.20" height="18" fill="#a03d35"/>
+    <text x="58" y="78" text-anchor="start" fill="#fff" font-weight="600">−90</text>
+    <text x="16" y="108">2</text>
+    <rect x="194" y="94" width="107.44" height="18" fill="#176956"/>
+    <text x="307.44" y="108" text-anchor="start" font-weight="600">+68</text>
+    <text x="16" y="138">3</text>
+    <rect x="194" y="124" width="6.32" height="18" fill="#176956"/>
+    <text x="206.32" y="138" text-anchor="start" font-weight="600">+4</text>
+    <text x="16" y="168">4</text>
+    <rect x="162.4" y="154" width="31.60" height="18" fill="#a03d35"/>
+    <text x="156.40" y="168" text-anchor="end" font-weight="600">−20</text>
+    <text x="16" y="198">5</text>
+    <rect x="194" y="184" width="116.92" height="18" fill="#176956"/>
+    <text x="316.92" y="198" text-anchor="start" font-weight="600">+74</text>
+    <text x="16" y="228">6</text>
+    <rect x="194" y="214" width="4.74" height="18" fill="#176956"/>
+    <text x="204.74" y="228" text-anchor="start" font-weight="600">+3</text>
+    <text x="16" y="258">7</text>
+    <rect x="194" y="244" width="83.74" height="18" fill="#176956"/>
+    <text x="283.74" y="258" text-anchor="start" font-weight="600">+53</text>
+    <text x="16" y="288">8</text>
+    <rect x="194" y="274" width="37.92" height="18" fill="#176956"/>
+    <text x="237.92" y="288" text-anchor="start" font-weight="600">+24</text>
+  </g>
+</svg>

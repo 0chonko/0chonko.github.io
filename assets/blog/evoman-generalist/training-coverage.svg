@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="164" viewBox="0 0 360 164">
+  <title>Training coverage</title>
+  <rect width="360" height="164" rx="12" fill="#f4f7f9"/>
+  <g font-family="system-ui, sans-serif" fill="#182b3b" font-size="16">
+    <text x="16" y="29" font-weight="700">Training coverage</text>
+    <text x="16" y="55" font-size="14">Enemy</text>
+    <text x="16" y="87" font-size="15">Set A</text>
+    <text x="16" y="121" font-size="15">Set B</text>
+    <text x="93" y="55" text-anchor="middle">1</text>
+    <rect x="80" y="68" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M86 81l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <rect x="80" y="102" width="26" height="26" rx="4" fill="none" stroke="#8797a6"/>
+    <text x="128" y="55" text-anchor="middle">2</text>
+    <rect x="115" y="68" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M121 81l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <rect x="115" y="102" width="26" height="26" rx="4" fill="none" stroke="#8797a6"/>
+    <text x="163" y="55" text-anchor="middle">3</text>
+    <rect x="150" y="68" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M156 81l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <rect x="150" y="102" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M156 115l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="198" y="55" text-anchor="middle">4</text>
+    <rect x="185" y="68" width="26" height="26" rx="4" fill="none" stroke="#8797a6"/>
+    <rect x="185" y="102" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M191 115l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="233" y="55" text-anchor="middle">5</text>
+    <rect x="220" y="68" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M226 81l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <rect x="220" y="102" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M226 115l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="268" y="55" text-anchor="middle">6</text>
+    <rect x="255" y="68" width="26" height="26" rx="4" fill="none" stroke="#8797a6"/>
+    <rect x="255" y="102" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M261 115l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="303" y="55" text-anchor="middle">7</text>
+    <rect x="290" y="68" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M296 81l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <rect x="290" y="102" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M296 115l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="338" y="55" text-anchor="middle">8</text>
+    <rect x="325" y="68" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M331 81l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <rect x="325" y="102" width="26" height="26" rx="4" fill="#176956"/>
+    <path d="M331 115l5 5 9-10" fill="none" stroke="#fff" stroke-width="2"/>
+    <text x="16" y="151" font-size="14">✓ Included in training</text>
+  </g>
+</svg>
